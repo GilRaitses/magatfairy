@@ -706,8 +706,9 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            const elapsedTime = clock.getElapsedTime();
-            const delta = clock.getDelta();
+            try {
+                const elapsedTime = clock.getElapsedTime();
+                const delta = clock.getDelta();
 
             // Animate MATLAB larvae above title (matching GitHub homepage style)
             matlabLarvae.forEach((larva, idx) => {
@@ -931,6 +932,9 @@
             renderer.setClearColor(0x7fff00, 0); // Chartreuse but fully transparent
             renderer.clearColor();
             composer.render();
+            } catch (error) {
+                console.error('Animation error:', error);
+            }
         }
 
         // Handle window resize
@@ -941,18 +945,18 @@
             composer.setSize(window.innerWidth, window.innerHeight);
         });
 
+        // Complete loading before starting animation
+        updateLoading(100);
+        
         // Start animation
         animate();
         
-        // Complete loading after animation starts
-        updateLoading(100);
-        
-        // Ensure loading screen hides after a short delay
+        // Ensure loading screen hides after animation starts
         setTimeout(() => {
             if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
                 loadingScreen.classList.add('hidden');
             }
-        }, 500);
+        }, 300);
 
         // Error handling
         window.addEventListener('error', (e) => {
