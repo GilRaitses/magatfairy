@@ -441,15 +441,18 @@
         const loadingProgress = document.getElementById('loading-progress');
         
         function updateLoading(percent) {
-            loadingProgress.style.width = percent + '%';
-            if (percent >= 100) {
+            if (loadingProgress) {
+                loadingProgress.style.width = percent + '%';
+            }
+            if (percent >= 100 && loadingScreen) {
                 setTimeout(() => {
                     loadingScreen.classList.add('hidden');
                 }, 500);
             }
         }
 
-        updateLoading(20);
+        // Start loading immediately
+        updateLoading(10);
 
         // Scene setup
         const scene = new THREE.Scene();
@@ -727,6 +730,13 @@
 
         updateLoading(100);
 
+        // Ensure loading screen hides even if there are errors
+        setTimeout(() => {
+            if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+                loadingScreen.classList.add('hidden');
+            }
+        }, 2000);
+
         // Animation
         const clock = new THREE.Clock();
         
@@ -844,6 +854,15 @@
 
         // Start animation
         animate();
+
+        // Error handling
+        window.addEventListener('error', (e) => {
+            console.error('Error:', e);
+            // Hide loading screen on error
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+            }
+        });
 
         // Mailing list form handler
         function handleEmailSubmit(event) {
