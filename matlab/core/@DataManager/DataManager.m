@@ -55,6 +55,7 @@ classdef DataManager < handle
         % External method signatures (implemented in separate files)
         loadExperiment(obj, mat_file, tracks_dir, bin_file)
         stim_times = detectStimuli(obj)
+        info = getInfo(obj)
     end
     
     methods (Access = private)

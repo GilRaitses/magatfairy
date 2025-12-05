@@ -41,6 +41,8 @@ def export_tier2_magat(bridge, output_file):
     print("=" * 70)
     print()
     
+    # Ensure app is in MATLAB workspace
+    bridge.eng.workspace['app'] = bridge.app
     info = bridge.eng.eval("app.getInfo()", nargout=1)
     num_tracks = int(float(info['num_tracks']))
     num_frames = int(float(info['num_frames']))
@@ -75,7 +77,7 @@ def export_tier2_magat(bridge, output_file):
         # === EXPERIMENT GLOBALS ===
         print("Exporting experiment globals...")
         bridge.eng.workspace['app'] = bridge.app
-        expt_data = bridge.eng.eval("app.DataManager.getCompleteExperiment()", nargout=1)
+        expt_data = bridge.eng.eval("app.getCompleteExperiment()", nargout=1)
         
         # Experiment info
         if 'experiment' in expt_data and expt_data['experiment']:
@@ -94,13 +96,13 @@ def export_tier2_magat(bridge, output_file):
         gq_grp = f.create_group('global_quantities')
         
         bridge.eng.workspace['app'] = bridge.app
-        num_gq = int(float(bridge.eng.eval("length(app.DataManager.eset.expt(1).globalQuantity)", nargout=1)))
+        num_gq = int(float(bridge.eng.eval("length(app.eset.expt(1).globalQuantity)", nargout=1)))
         
         print(f"  Exporting {num_gq} global quantities...")
         
         for i in range(1, num_gq + 1):
             bridge.eng.workspace['gq_idx'] = float(i)
-            gq_field_data = bridge.eng.eval("app.DataManager.getGlobalQuantity(gq_idx)", nargout=1)
+            gq_field_data = bridge.eng.eval("app.getGlobalQuantity(gq_idx)", nargout=1)
             
             field_name = str(gq_field_data['fieldname']).replace(' ', '_').replace('-', '_').replace('(', '').replace(')', '')
             field_grp = gq_grp.create_group(field_name)
@@ -116,7 +118,7 @@ def export_tier2_magat(bridge, output_file):
         # === EXPORT ETI TO ROOT (CRITICAL FOR SIMULATION SCRIPTS) ===
         print(f"\n  Extracting ETI from experiment.elapsedTime...")
         bridge.eng.workspace['app'] = bridge.app
-        eti_result = bridge.eng.eval("app.DataManager.eset.expt(1).elapsedTime", nargout=1)
+        eti_result = bridge.eng.eval("app.eset.expt(1).elapsedTime", nargout=1)
         
         if eti_result is not None:
             eti_data = np.array(eti_result).flatten()
@@ -146,7 +148,7 @@ def export_tier2_magat(bridge, output_file):
             print(f"  Track {track_id}/{num_tracks}...", end=' ', flush=True)
             
             bridge.eng.workspace['track_id'] = float(track_id)
-            track_data = bridge.eng.eval("app.DataManager.getCompleteTrackData(track_id)", nargout=1)
+            track_data = bridge.eng.eval("app.getCompleteTrackData(track_id)", nargout=1)
             
             track_grp = tracks_grp.create_group(f'track_{track_id}')
             
@@ -219,7 +221,7 @@ def export_tier2_magat(bridge, output_file):
         
         try:
             bridge.eng.workspace['app'] = bridge.app
-            led_data = bridge.eng.eval("app.DataManager.led_data", nargout=1)
+            led_data = bridge.eng.eval("app.led_data", nargout=1)
             if led_data is not None:
                 f.create_dataset('led_data', data=np.array(led_data).flatten().astype(np.float32), **comp)
         except Exception as e:
@@ -243,7 +245,7 @@ def export_tier2_magat(bridge, output_file):
             bridge.eng.workspace['app'] = bridge.app
             # Compute lengthPerPixel using same method as MATLAB validation scripts
             lpp_code = """
-            cc = app.DataManager.eset.expt(1).camcalinfo;
+            cc = app.eset.expt(1).camcalinfo;
             test_pixels_x = [100, 500];
             test_pixels_y = [100, 500];
             real_coords_x = cc.c2rX(test_pixels_x, test_pixels_y);

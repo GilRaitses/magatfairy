@@ -16,6 +16,11 @@ import re
 import subprocess
 import shutil
 import os
+import atexit
+import signal
+import gc
+import io
+import platform
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -27,6 +32,145 @@ SRC_ROOT = REPO_ROOT / "src"
 # MAGAT codebase repository (Samuel Lab)
 MAGAT_REPO_URL = "https://github.com/samuellab/MAGATAnalyzer-Matlab-Analysis.git"
 MAGAT_REPO_NAME = "MAGATAnalyzer-Matlab-Analysis"
+
+_CLEANUP_DONE = False
+_RUN_COMPLETED = False
+
+
+def close_open_files():
+    """Close open file handles to release locks (best-effort)."""
+    try:
+        for obj in gc.get_objects():
+            try:
+                if isinstance(obj, io.IOBase) and not obj.closed:
+                    obj.close()
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+
+def kill_python_processes(exclude_pid: Optional[int] = None):
+    """Terminate python processes to avoid lingering file locks."""
+    try:
+        import psutil  # type: ignore
+    except Exception:
+        psutil = None
+
+    if psutil:
+        for proc in psutil.process_iter(["pid", "name"]):
+            try:
+                name = (proc.info.get("name") or "").lower()
+                if "python" in name and proc.pid != exclude_pid:
+                    proc.terminate()
+            except Exception:
+                continue
+        for proc in psutil.process_iter(["pid", "name"]):
+            try:
+                name = (proc.info.get("name") or "").lower()
+                if "python" in name and proc.pid != exclude_pid:
+                    proc.wait(timeout=2)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    continue
+    else:
+        if os.name == "nt":
+            filters = ["/F", "/FI", f"PID ne {exclude_pid}"] if exclude_pid else ["/F"]
+            for image in ("python.exe", "python3.exe", "pythonw.exe"):
+                cmd = ["taskkill", "/IM", image, *filters]
+                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        else:
+            subprocess.run(
+                ["pkill", "-f", "python"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+
+
+def kill_named_processes(names, exclude_pid: Optional[int] = None):
+    """Terminate processes by name (best-effort), skipping exclude_pid."""
+    try:
+        import psutil  # type: ignore
+    except Exception:
+        psutil = None
+
+    if psutil:
+        lowered = {n.lower() for n in names}
+        for proc in psutil.process_iter(["pid", "name"]):
+            try:
+                name = (proc.info.get("name") or "").lower()
+                if name in lowered and proc.pid != exclude_pid:
+                    proc.terminate()
+            except Exception:
+                continue
+        for proc in psutil.process_iter(["pid", "name"]):
+            try:
+                name = (proc.info.get("name") or "").lower()
+                if name in lowered and proc.pid != exclude_pid:
+                    proc.wait(timeout=2)
+            except Exception:
+                try:
+                    proc.kill()
+                except Exception:
+                    continue
+    else:
+        if os.name == "nt":
+            filters = ["/F", "/FI", f"PID ne {exclude_pid}"] if exclude_pid else ["/F"]
+            for name in names:
+                cmd = ["taskkill", "/IM", name, *filters]
+                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        else:
+            for name in names:
+                subprocess.run(
+                    ["pkill", "-f", name],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                )
+
+
+def cleanup_on_exit(reason: str = "exit"):
+    """Best-effort cleanup to free locks and stop python processes."""
+    global _CLEANUP_DONE
+    if _CLEANUP_DONE:
+        return
+    _CLEANUP_DONE = True
+
+    if _RUN_COMPLETED and reason == "normal":
+        return
+
+    close_open_files()
+    kill_python_processes(exclude_pid=os.getpid())
+    if os.name == "nt":
+        # MATLAB can hold files; Explorer preview can lock folders.
+        kill_named_processes(["MATLAB.exe", "matlab.exe", "matlab"], exclude_pid=os.getpid())
+        # Cursor.exe (IDE) can hold file handles from indexing/open files
+        if os.environ.get("MAGATFAIRY_KILL_CURSOR", "0") == "1":
+            kill_named_processes(["Cursor.exe", "cursor.exe"], exclude_pid=os.getpid())
+        if os.environ.get("MAGATFAIRY_KILL_EXPLORER", "0") == "1":
+            kill_named_processes(["explorer.exe", "explorer"], exclude_pid=os.getpid())
+
+
+def _signal_handler(signum, frame):
+    cleanup_on_exit(f"signal:{signum}")
+    sys.exit(1)
+
+
+def setup_cleanup_hooks():
+    atexit.register(cleanup_on_exit)
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            signal.signal(sig, _signal_handler)
+        except Exception:
+            continue
+    if hasattr(signal, "SIGBREAK"):
+        try:
+            signal.signal(signal.SIGBREAK, _signal_handler)
+        except Exception:
+            pass
 
 
 def check_matlab_engine():
@@ -652,6 +796,9 @@ def handle_validate_full(args):
 
 def main():
     """Main entry point"""
+    global _RUN_COMPLETED
+    setup_cleanup_hooks()
+
     parser = create_parser()
     args = parser.parse_args()
 
@@ -723,7 +870,13 @@ def main():
     
     handler = handlers.get((args.command, getattr(args, 'subcommand', None)))
     if handler:
-        sys.exit(handler(args))
+        try:
+            rc = handler(args)
+            _RUN_COMPLETED = True
+            return rc
+        finally:
+            if _RUN_COMPLETED:
+                cleanup_on_exit("normal")
     else:
         parser.print_help()
         sys.exit(1)

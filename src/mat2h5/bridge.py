@@ -181,16 +181,16 @@ class MAGATBridge:
             # Try to detect stimuli from LED data or global quantities
             detect_code = """
             % Try to detect stimuli from LED1 global quantity
-            if ~isempty(app.DataManager.eset.expt(1).globalQuantity)
+            if ~isempty(app.eset.expt(1).globalQuantity)
                 led1_idx = [];
-                for i = 1:length(app.DataManager.eset.expt(1).globalQuantity)
-                    if strcmpi(app.DataManager.eset.expt(1).globalQuantity(i).fieldname, 'led1Val')
+                for i = 1:length(app.eset.expt(1).globalQuantity)
+                    if strcmpi(app.eset.expt(1).globalQuantity(i).fieldname, 'led1Val')
                         led1_idx = i;
                         break;
                     end
                 end
                 if ~isempty(led1_idx)
-                    led1_data = app.DataManager.eset.expt(1).globalQuantity(led1_idx).yData;
+                    led1_data = app.eset.expt(1).globalQuantity(led1_idx).yData;
                     % Simple threshold-based detection
                     threshold = max(led1_data) * 0.5;
                     onset_frames = find(diff(led1_data > threshold) == 1) + 1;
