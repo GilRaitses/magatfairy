@@ -46,6 +46,64 @@
             pointer-events: none;
         }
 
+        #main-fairy-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            opacity: 0.25;
+            mix-blend-mode: screen;
+        }
+
+        #main-fairy-background .fairy-art {
+            font-family: 'Courier New', monospace;
+            font-size: 8px;
+            line-height: 1;
+            white-space: pre;
+            color: #000;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+        }
+
+        #main-fairy-background .fairy-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 400%;
+            height: 400%;
+            background: conic-gradient(
+                from 0deg,
+                #ff6b35 0%,
+                #ff7a45 10%,
+                #fbbf24 20%,
+                #f9d371 30%,
+                #7fff00 40%,
+                #8fff33 50%,
+                #7df9ff 60%,
+                #8dfaff 70%,
+                #667eea 80%,
+                #6f7feb 90%,
+                #764ba2 100%,
+                #8a5fb8 110%,
+                #ff6b35 120%
+            );
+            background-size: 200% 200%;
+            animation: swirlGradient 10s linear infinite;
+            mix-blend-mode: overlay;
+            opacity: 0.1;
+            filter: blur(40px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
         #content > * {
             pointer-events: auto;
         }
@@ -60,8 +118,9 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             background-size: 200% 200%;
-            animation: gradientShift 3s ease infinite;
-            text-shadow: 0 0 30px rgba(255, 212, 229, 0.5);
+            animation: gradientShift 8s ease infinite;
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 12px rgba(255, 212, 229, 0.5)) drop-shadow(0 0 20px rgba(229, 244, 255, 0.3));
+            position: relative;
         }
 
         @keyframes gradientShift {
@@ -274,6 +333,13 @@
         </div>
     </div>
 
+    <div id="main-fairy-background">
+        <div class="fairy-container">
+            <div class="fairy-gradient"></div>
+            <div class="fairy-art" id="main-fairy-art"></div>
+        </div>
+    </div>
+
     <div id="canvas-container"></div>
     
     <div id="content">
@@ -307,6 +373,7 @@
         // Loading progress
         const loadingScreen = document.getElementById('loading-screen');
         const fairyArt = document.getElementById('fairy-art');
+        const mainFairyArt = document.getElementById('main-fairy-art');
         
         // Load fairy ASCII art
         const fairyASCII = `⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -387,6 +454,9 @@
 
         if (fairyArt) {
             fairyArt.textContent = fairyASCII;
+        }
+        if (mainFairyArt) {
+            mainFairyArt.textContent = fairyASCII;
         }
         
         let loadingStartTime = Date.now();
