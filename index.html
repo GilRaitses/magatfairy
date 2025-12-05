@@ -647,6 +647,7 @@
         updateLoading(70);
 
         // Larva particle system for data flow
+        updateLoading(75);
         const larvaParticleCount = 50;
         const larvaParticles = [];
         const larvaVelocities = [];
@@ -760,14 +761,7 @@
         controls.minDistance = 10;
         controls.maxDistance = 50;
 
-        updateLoading(100);
-
-        // Ensure loading screen hides even if there are errors
-        setTimeout(() => {
-            if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
-                loadingScreen.classList.add('hidden');
-            }
-        }, 2000);
+        updateLoading(95);
 
         // Animation
         const clock = new THREE.Clock();
