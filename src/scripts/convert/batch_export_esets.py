@@ -14,10 +14,18 @@ Date: 2025-11-11
 import sys
 import subprocess
 import os
+import json
+import logging
 from pathlib import Path
 import time
 import re
 from typing import Dict, List, Optional
+
+# Add parent to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+
+from mat2h5.progress import ColoredProgress, print_red_header, print_white_header, print_blue_header
+from mat2h5.config import get_magat_codebase
 
 # Script paths (relative to this file)
 CONVERT_SCRIPT = Path(__file__).parent / "convert_matlab_to_h5.py"
@@ -134,22 +142,47 @@ def detect_experiments_in_eset(eset_dir: Path) -> List[Dict]:
     return experiments
 
 
-def export_experiment(file_info: Dict, output_dir: Path, codebase_path: Path = None) -> Dict:
+def export_experiment(file_info: Dict, output_dir: Path, codebase_path: Path = None, 
+                     skip_existing: bool = False, dry_run: bool = False, 
+                     logger: Optional[logging.Logger] = None) -> Dict:
     """Export a single experiment using convert_matlab_to_h5.py"""
     base_name = file_info['base_name']
     
-    print(f"\n{'='*80}")
-    print(f"EXPORTING: {base_name}")
-    print(f"{'='*80}")
-    print(f"  Genotype: {file_info['genotype']}")
-    print(f"  Timestamp: {file_info['timestamp']}")
-    print(f"  MAT file: {file_info['mat_file'].name}")
-    print(f"  Tracks: {file_info['tracks_dir'].name}")
-    print(f"  BIN file: {file_info['bin_file'].name}")
-    print()
-    
     # Output filename matches base_name with .h5 extension
     output_file = output_dir / f"{base_name}.h5"
+    
+    # Check if file exists and skip if requested
+    if skip_existing and output_file.exists():
+        if logger:
+            logger.info(f"Skipping {base_name} - file already exists: {output_file}")
+        return {
+            'success': True,
+            'output_file': output_file,
+            'file_size_mb': output_file.stat().st_size / (1024 * 1024),
+            'time_min': 0,
+            'base_name': base_name,
+            'timestamp': file_info['timestamp'],
+            'skipped': True
+        }
+    
+    if dry_run:
+        print(f"  [DRY-RUN] Would convert: {base_name} -> {output_file.name}")
+        return {
+            'success': True,
+            'output_file': output_file,
+            'file_size_mb': 0,
+            'time_min': 0,
+            'base_name': base_name,
+            'timestamp': file_info['timestamp'],
+            'dry_run': True
+        }
+    
+    if logger:
+        logger.info(f"Exporting {base_name} -> {output_file.name}")
+    
+    print(f"\n  Exporting: {base_name}")
+    print(f"    MAT: {file_info['mat_file'].name}")
+    print(f"    Output: {output_file.name}")
     
     # Build command
     cmd = [
@@ -215,7 +248,30 @@ def export_experiment(file_info: Dict, output_dir: Path, codebase_path: Path = N
         }
 
 
-def process_genotype(root_dir: Path, output_dir: Path, codebase_path: Path = None) -> List[Dict]:
+def load_progress(output_dir: Path) -> set:
+    """Load progress tracking file"""
+    progress_file = output_dir / ".progress.json"
+    if progress_file.exists():
+        try:
+            with open(progress_file, 'r') as f:
+                data = json.load(f)
+                return set(data.get('completed', []))
+        except (json.JSONDecodeError, IOError):
+            return set()
+    return set()
+
+
+def save_progress(output_dir: Path, completed: List[str]):
+    """Save progress tracking file"""
+    progress_file = output_dir / ".progress.json"
+    progress_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(progress_file, 'w') as f:
+        json.dump({'completed': completed}, f, indent=2)
+
+
+def process_genotype(root_dir: Path, output_dir: Path, codebase_path: Path = None,
+                    skip_existing: bool = False, resume: bool = False, dry_run: bool = False,
+                    logger: Optional[logging.Logger] = None) -> List[Dict]:
     """
     Process all ESET folders in a root directory.
     
@@ -223,13 +279,16 @@ def process_genotype(root_dir: Path, output_dir: Path, codebase_path: Path = Non
         root_dir: Path to root directory containing ESET folders
         output_dir: Path to output directory for H5 files
         codebase_path: Path to MAGAT codebase
+        skip_existing: Skip files that already exist
+        resume: Resume from previous progress
+        dry_run: Preview mode, don't actually convert
+        logger: Optional logger instance
     
     Returns:
         List of export results
     """
-    print("="*80)
-    print(f"PROCESSING ROOT DIRECTORY: {root_dir.name}")
-    print("="*80)
+    # RED SECTION: Beginning - Setup and discovery
+    print_red_header(f"Processing Root Directory: {root_dir.name}")
     
     # Find all ESET folders
     eset_folders = [d for d in root_dir.iterdir() if d.is_dir() and (d / "matfiles").exists()]
@@ -238,31 +297,60 @@ def process_genotype(root_dir: Path, output_dir: Path, codebase_path: Path = Non
         print(f"[WARNING] No ESET folders found in {root_dir.name}")
         return []
     
-    print(f"[OK] Found {len(eset_folders)} ESET folders")
+    print(f"Found {len(eset_folders)} ESET folders")
+    
+    # Discover all experiments
+    all_experiments = []
+    for eset_dir in sorted(eset_folders):
+        experiments = detect_experiments_in_eset(eset_dir)
+        for exp in experiments:
+            exp['eset_name'] = eset_dir.name
+            all_experiments.append(exp)
+    
+    total_experiments = len(all_experiments)
+    print(f"Found {total_experiments} total experiments")
+    
+    # Load progress if resuming
+    completed = set()
+    if resume:
+        completed = load_progress(output_dir)
+        print(f"Resuming: {len(completed)} already completed")
+    
+    # Initialize progress tracker
+    progress = ColoredProgress(total_experiments)
+    
+    # WHITE SECTION: Middle - Processing
+    print_white_header("Converting Experiments")
     
     all_results = []
+    completed_list = list(completed)
     
-    for eset_idx, eset_dir in enumerate(sorted(eset_folders), 1):
-        print(f"\n{'='*80}")
-        print(f"ESET {eset_idx}/{len(eset_folders)}: {eset_dir.name}")
-        print(f"{'='*80}")
+    for exp_idx, file_info in enumerate(all_experiments, 1):
+        base_name = file_info['base_name']
         
-        experiments = detect_experiments_in_eset(eset_dir)
-        
-        if not experiments:
-            print(f"[WARNING] No complete experiments found in {eset_dir.name}")
+        # Skip if already completed and resuming
+        if resume and base_name in completed:
+            progress.update(1, f"Skipped (already done): {base_name}")
             continue
         
-        print(f"[OK] Found {len(experiments)} complete experiments")
+        # Update progress
+        progress.update(0, f"Processing: {base_name}")
         
-        for exp_idx, file_info in enumerate(experiments, 1):
-            print(f"\n[{exp_idx}/{len(experiments)}] Processing experiment...")
-            result = export_experiment(file_info, output_dir, codebase_path)
-            all_results.append(result)
-            
-            if exp_idx < len(experiments):
-                print("\n" + "-"*80)
-                time.sleep(2)
+        # Export experiment
+        result = export_experiment(file_info, output_dir, codebase_path, 
+                                  skip_existing, dry_run, logger)
+        all_results.append(result)
+        
+        # Update progress
+        if result.get('success'):
+            completed_list.append(base_name)
+            if resume:
+                save_progress(output_dir, completed_list)
+            progress.update(1, f"✓ {base_name}")
+        else:
+            progress.update(1, f"✗ {base_name} failed")
+    
+    progress.finish("All experiments processed")
     
     return all_results
 
@@ -290,6 +378,16 @@ Examples:
                        help='Output directory for H5 files')
     parser.add_argument('--codebase', type=str, default=None,
                        help='Path to MAGAT codebase (or set MAGAT_CODEBASE env var)')
+    parser.add_argument('--skip-existing', action='store_true',
+                       help='Skip files that already exist')
+    parser.add_argument('--resume', action='store_true',
+                       help='Resume from previous progress')
+    parser.add_argument('--dry-run', action='store_true',
+                       help='Preview what would be converted without actually converting')
+    parser.add_argument('--log-file', type=str, default=None,
+                       help='Log file path (default: output_dir/conversion.log)')
+    parser.add_argument('--validate', action='store_true',
+                       help='Run schema validation after conversion')
     
     args = parser.parse_args()
     
@@ -298,32 +396,100 @@ Examples:
         print(f"[ERROR] Convert script not found: {CONVERT_SCRIPT}")
         return 1
     
-    # Get codebase path
-    codebase_path = args.codebase or os.environ.get('MAGAT_CODEBASE')
-    if codebase_path:
-        codebase_path = Path(codebase_path)
-        os.environ['MAGAT_CODEBASE'] = str(codebase_path)
-        print(f"[INFO] Using MAGAT codebase: {codebase_path}")
-    
     # Set output directory
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    print("="*80)
-    print("BATCH EXPORT: MATLAB TO H5 CONVERSION")
-    print("="*80)
-    print(f"Output directory: {output_dir}")
-    print(f"Convert script: {CONVERT_SCRIPT}")
-    if codebase_path:
-        print(f"MAGAT codebase: {codebase_path}")
-    print()
+    # Setup logging
+    log_file = args.log_file or (output_dir / "conversion.log")
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+    logger = logging.getLogger(__name__)
     
-    # Get codebase path from argument or environment
-    codebase_path = args.codebase or os.environ.get('MAGAT_CODEBASE')
+    # Get codebase path (from config, env, or arg)
+    codebase_path = args.codebase or get_magat_codebase() or os.environ.get('MAGAT_CODEBASE')
+    
+    if not codebase_path:
+        # Try to clone automatically
+        repo_parent = Path(__file__).parent.parent.parent.parent.parent
+        default_codebase_path = repo_parent / "MAGATAnalyzer-Matlab-Analysis"
+        
+        if default_codebase_path.exists():
+            codebase_path = default_codebase_path
+            logger.info(f"Found MAGAT codebase at default location: {codebase_path}")
+        else:
+            logger.warning("No MAGAT codebase specified. Set --codebase or MAGAT_CODEBASE env var.")
+            print("\n" + "="*80)
+            print("MAGAT Codebase Required")
+            print("="*80)
+            print("\nThe MAGAT codebase is required for conversion.")
+            print(f"Expected location: {default_codebase_path}")
+            print("\nOptions:")
+            print("  1. Clone automatically: Press Enter")
+            print("  2. Provide path: Enter path to existing codebase")
+            print()
+            
+            response = input("Action [Enter to clone, or path]: ").strip()
+            
+            if not response:
+                # Clone automatically
+                import subprocess
+                import shutil
+                MAGAT_REPO_URL = "https://github.com/samuellab/MAGATAnalyzer-Matlab-Analysis.git"
+                
+                if shutil.which('git'):
+                    print(f"\nCloning MAGAT codebase to: {default_codebase_path}")
+                    try:
+                        default_codebase_path.parent.mkdir(parents=True, exist_ok=True)
+                        subprocess.check_call([
+                            'git', 'clone', MAGAT_REPO_URL, str(default_codebase_path)
+                        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        codebase_path = default_codebase_path
+                        logger.info(f"Cloned MAGAT codebase to: {codebase_path}")
+                    except subprocess.CalledProcessError:
+                        print("✗ Failed to clone. Please clone manually or provide path.")
+                        return 1
+                else:
+                    print("✗ Git not found. Cannot clone automatically.")
+                    return 1
+            else:
+                codebase_path = Path(response).expanduser()
+                if not codebase_path.exists():
+                    print(f"✗ Path does not exist: {codebase_path}")
+                    return 1
+    
     if codebase_path:
         codebase_path = Path(codebase_path)
+        os.environ['MAGAT_CODEBASE'] = str(codebase_path)
+        logger.info(f"Using MAGAT codebase: {codebase_path}")
+    
+    if not codebase_path:
+        print("[ERROR] MAGAT codebase path required")
+        print("  Set --codebase argument, MAGAT_CODEBASE env var, or use: mat2h5 config set magat_codebase /path")
+        return 1
+    
+    if dry_run:
+        print("="*80)
+        print("DRY-RUN MODE: Preview Only")
+        print("="*80)
     else:
-        codebase_path = None
+        print("="*80)
+        print("BATCH EXPORT: MATLAB TO H5 CONVERSION")
+        print("="*80)
+    print(f"Output directory: {output_dir}")
+    print(f"Convert script: {CONVERT_SCRIPT}")
+    print(f"MAGAT codebase: {codebase_path}")
+    if skip_existing:
+        print("Skip existing: Enabled")
+    if resume:
+        print("Resume: Enabled")
+    print()
     
     # Process ESETs
     if args.eset_dir:
@@ -333,16 +499,31 @@ Examples:
             print(f"[ERROR] ESET directory not found: {eset_dir}")
             return 1
         
+        print_red_header(f"Processing ESET: {eset_dir.name}")
         experiments = detect_experiments_in_eset(eset_dir)
         if not experiments:
             print(f"[ERROR] No complete experiments found in {eset_dir}")
             return 1
         
+        print(f"Found {len(experiments)} experiments")
+        
+        # Use progress tracker for single ESET too
+        print_white_header("Converting Experiments")
+        progress = ColoredProgress(len(experiments))
         all_results = []
+        
         for exp_idx, file_info in enumerate(experiments, 1):
-            print(f"\n[{exp_idx}/{len(experiments)}] Processing experiment...")
-            result = export_experiment(file_info, output_dir, codebase_path)
+            progress.update(0, f"Processing: {file_info['base_name']}")
+            result = export_experiment(file_info, output_dir, codebase_path,
+                                     args.skip_existing, args.dry_run, logger)
             all_results.append(result)
+            
+            if result.get('success'):
+                progress.update(1, f"✓ {file_info['base_name']}")
+            else:
+                progress.update(1, f"✗ {file_info['base_name']} failed")
+        
+        progress.finish()
     elif args.root_dir:
         # Process root directory with multiple ESETs
         root_dir = Path(args.root_dir)
@@ -350,40 +531,47 @@ Examples:
             print(f"[ERROR] Root directory not found: {root_dir}")
             return 1
         
-        all_results = process_genotype(root_dir, output_dir, codebase_path)
+        all_results = process_genotype(root_dir, output_dir, codebase_path,
+                                     args.skip_existing, args.resume, args.dry_run, logger)
     else:
         print("[ERROR] Must specify either --root-dir or --eset-dir")
         return 1
     
-    # Summary
-    total_time = time.time()
-    successful = [r for r in all_results if r['success']]
-    failed = [r for r in all_results if not r['success']]
+    # BLUE SECTION: End - Summary and validation
+    print_blue_header("Finalizing")
     
-    print("\n" + "="*80)
-    print("BATCH EXPORT SUMMARY")
-    print("="*80)
-    print(f"Total experiments: {len(all_results)}")
+    successful = [r for r in all_results if r.get('success')]
+    failed = [r for r in all_results if not r.get('success')]
+    skipped = [r for r in all_results if r.get('skipped')]
+    
+    print(f"\nTotal experiments: {len(all_results)}")
     print(f"Successful: {len(successful)}")
+    if skipped:
+        print(f"Skipped (already exist): {len(skipped)}")
     print(f"Failed: {len(failed)}")
     print()
     
     if successful:
-        print("[SUCCESS] Successful exports:")
+        print("Successful exports:")
         total_size = 0
-        for r in successful:
+        for r in successful[:10]:  # Show first 10
             size = r.get('file_size_mb', 0)
             total_size += size
-            print(f"   {r['base_name']}: {size:.1f} MB")
-        print(f"\n   Total size: {total_size:.1f} MB")
+            status = "(skipped)" if r.get('skipped') else "(converted)"
+            print(f"  ✓ {r['base_name']} {status} - {size:.1f} MB")
+        if len(successful) > 10:
+            print(f"  ... and {len(successful) - 10} more")
+        print(f"\n  Total size: {total_size:.1f} MB")
     
     if failed:
-        print("\n[ERROR] Failed exports:")
+        print("\nFailed exports:")
         for r in failed:
             error = r.get('error', 'Unknown error')
-            print(f"   {r['base_name']}: {error}")
+            print(f"  ✗ {r['base_name']}: {error}")
     
     print(f"\nOutput directory: {output_dir}")
+    if logger:
+        logger.info(f"Batch export complete: {len(successful)}/{len(all_results)} successful")
     print("="*80)
     
     return 0 if len(failed) == 0 else 1

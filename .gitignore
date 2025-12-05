@@ -11,7 +11,9 @@ ENV/
 
 # Output
 h5_output/
+exports/
 *.h5
+*.log
 
 # IDE
 .vscode/

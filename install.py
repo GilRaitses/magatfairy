@@ -28,6 +28,23 @@ def check_git():
     print("⚠ Git not found (optional, needed for cloning MAGAT codebase)")
     return False
 
+def check_matlab_engine():
+    """Check if MATLAB Engine for Python is actually working"""
+    try:
+        import matlab.engine
+        print("Testing MATLAB Engine connection...")
+        eng = matlab.engine.start_matlab()
+        eng.quit()
+        print("✓ MATLAB Engine is working!")
+        return True
+    except ImportError:
+        print("⚠ MATLAB Engine not found")
+        return False
+    except Exception as e:
+        print(f"⚠ MATLAB Engine test failed: {e}")
+        return False
+
+
 def install_requirements():
     """Install Python packages from requirements.txt"""
     requirements_file = Path(__file__).parent / "requirements.txt"
@@ -58,6 +75,7 @@ def install_requirements():
         print("  https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html")
         return False
 
+
 def main():
     print("=" * 60)
     print("mat2h5 Installation")
@@ -73,14 +91,65 @@ def main():
     # Install requirements
     success = install_requirements()
     
+    # Check MATLAB Engine
+    print("\nChecking MATLAB Engine...")
+    matlab_ok = check_matlab_engine()
+    
     print()
     print("=" * 60)
     if success:
         print("Installation complete!")
         print()
+        if matlab_ok:
+            print("✓ All checks passed!")
+        else:
+            print("⚠ MATLAB Engine check failed.")
+            print("  You may need to install it manually:")
+            print("  cd matlabroot/extern/engines/python")
+            print("  python setup.py install")
+        print()
         print("Next steps:")
-        print("  1. Ensure MATLAB is installed and MATLAB Engine for Python is set up")
-        print("  2. Run: python mat2h5.py")
+        print("  1. Set MAGAT codebase: mat2h5 config set magat_codebase /path/to/magat")
+        print("  2. Run: mat2h5 convert auto")
+    else:
+        print("Installation encountered errors. Please check the output above.")
+    print("=" * 60)
+
+def main():
+    print("=" * 60)
+    print("mat2h5 Installation")
+    print("=" * 60)
+    print()
+    
+    # Check Python version
+    check_python_version()
+    
+    # Check git (optional)
+    git_available = check_git()
+    
+    # Install requirements
+    success = install_requirements()
+    
+    # Check MATLAB Engine
+    print("\nChecking MATLAB Engine...")
+    matlab_ok = check_matlab_engine()
+    
+    print()
+    print("=" * 60)
+    if success:
+        print("Installation complete!")
+        print()
+        if matlab_ok:
+            print("✓ All checks passed!")
+        else:
+            print("⚠ MATLAB Engine check failed.")
+            print("  You may need to install it manually:")
+            print("  cd matlabroot/extern/engines/python")
+            print("  python setup.py install")
+        print()
+        print("Next steps:")
+        print("  1. Set MAGAT codebase: mat2h5 config set magat_codebase /path/to/magat")
+        print("  2. Run: mat2h5 convert auto")
     else:
         print("Installation encountered errors. Please check the output above.")
     print("=" * 60)

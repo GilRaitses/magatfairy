@@ -269,12 +269,46 @@ Scripts can also be run directly:
 python src/scripts/convert/batch_export_esets.py --root-dir /path/to/data --output-dir /path/to/output
 ```
 
+## Configuration
+
+Save your MAGAT codebase path to avoid entering it every time:
+
+```bash
+mat2h5 config set magat_codebase /path/to/magat
+mat2h5 config set default_output /path/to/exports
+mat2h5 config show  # View all settings
+```
+
+## Troubleshooting
+
+### MATLAB Engine Not Found
+- Install MATLAB Engine for Python:
+  ```bash
+  cd matlabroot/extern/engines/python
+  python setup.py install
+  ```
+- See: https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
+
+### Conversion Fails
+- Check that MAGAT codebase path is correct: `mat2h5 config get magat_codebase`
+- Verify MATLAB can access the codebase
+- Check log file: `exports/conversion.log`
+
+### Files Already Exist
+- Use `--skip-existing` to skip already-converted files
+- Use `--resume` to continue from previous progress
+
+### Progress Tracking
+- Progress is saved to `exports/.progress.json`
+- Use `--resume` to continue interrupted conversions
+- Colored progress: Red (beginning), White (middle), Blue (end)
+
 ## Support
 
 For issues or questions:
 - Check the troubleshooting section above
 - Review field mapping reference: `docs/field-mapping.md`
-- Check MATLAB Engine installation: https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
+- Check log files in `exports/` directory
 
 ## License
 
