@@ -6,8 +6,11 @@ This guide shows how to push the mat2h5 repository to GitHub or GitLab.
 
 ### 1. Create a new repository on GitHub
 - Go to https://github.com/new
-- Name it `mat2h5` (or your preferred name)
+- **Repository name:** `mat2h5` (or your preferred name)
+- **Description:** `Standalone tool for converting MAGAT (MATLAB Track Analysis) experiment data to H5 format for Python analysis pipelines.`
+- **Visibility:** Public or Private (your choice)
 - **Do NOT** initialize with README, .gitignore, or license (we already have these)
+- **Topics/Tags:** `matlab`, `h5`, `hdf5`, `magat`, `data-conversion`, `bioinformatics`, `neuroscience`, `optogenetics`, `python`
 - Click "Create repository"
 
 ### 2. Add remote and push
@@ -30,8 +33,10 @@ git push -u origin main
 
 ### 1. Create a new project on GitLab
 - Go to https://gitlab.com/projects/new
-- Name it `mat2h5`
-- Set visibility (public/private)
+- **Project name:** `mat2h5`
+- **Project slug:** `mat2h5` (auto-filled)
+- **Visibility Level:** Public or Private (your choice)
+- **Project description:** `Standalone tool for converting MAGAT (MATLAB Track Analysis) experiment data to H5 format for Python analysis pipelines.`
 - **Do NOT** initialize with README
 - Click "Create project"
 
