@@ -191,7 +191,7 @@ def load_calibration(h5_path: Path) -> Optional[CameraCalibration]:
 
 
 if __name__ == '__main__':
-    # Test with a real H5 file
+    # Test with an H5 file
     import sys
     
     if len(sys.argv) > 1:

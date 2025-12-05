@@ -37,8 +37,8 @@ REQUIRED_FIELDS = [
     FieldSpec('/camcalinfo', 'group', None, None, 'Camera calibration group'),
     
     # Camera calibration - point arrays (required for interpolation reconstruction)
-    FieldSpec('/camcalinfo/realx', 'float64', 1, None, 'Real X calibration points'),
-    FieldSpec('/camcalinfo/realy', 'float64', 1, None, 'Real Y calibration points'),
+    FieldSpec('/camcalinfo/realx', 'float64', 1, None, 'World X calibration points (cm)'),
+    FieldSpec('/camcalinfo/realy', 'float64', 1, None, 'World Y calibration points (cm)'),
     FieldSpec('/camcalinfo/camx', 'float64', 1, None, 'Camera X calibration points'),
     FieldSpec('/camcalinfo/camy', 'float64', 1, None, 'Camera Y calibration points'),
     
