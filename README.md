@@ -15,7 +15,7 @@ This tool is designed for researchers who:
 ### 1. Clone mat2h5
 
 ```bash
-git clone <repository-url> mat2h5
+git clone https://github.com/GilRaitses/mat2h5.git
 cd mat2h5
 ```
 
