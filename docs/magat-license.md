@@ -1,4 +1,4 @@
-# MAGAT Analyzer License Information
+# MAGAT License
 
 mat2h5 uses the MAGAT Analyzer (Multi Animal Gate and Track Analyzer) codebase, which is licensed separately from mat2h5.
 

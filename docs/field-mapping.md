@@ -1,13 +1,6 @@
-# Field Mapping: MATLAB Experiment to H5
+# Field Mapping: MATLAB to H5
 
-## Overview
-
-This document maps every MATLAB experiment field to its corresponding H5 path.
-Both pipelines must produce identical outputs when given the same input data.
-
-**Source**: Mason Klein's MATLAB scripts
-**Target**: Python H5-based pipeline
-**Validation Requirement**: All fields must match identically (tolerances specified below)
+Reference for mapping MATLAB experiment fields to H5 paths.
 
 ---
 
