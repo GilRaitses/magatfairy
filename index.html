@@ -297,54 +297,43 @@
         const matlabStructures = [];
         const structureGroups = [];
 
-        // Create genotype groups (above title)
-        for (let g = 0; g < 2; g++) {
-            const group = new THREE.Group();
-            group.position.x = (g - 0.5) * 3;
-            group.position.y = 8; // Above the title
-            group.position.z = -5;
+        // Create individual larvae above title (like GitHub homepage)
+        const larvaCount = 8;
+        const matlabLarvae = [];
+        
+        for (let i = 0; i < larvaCount; i++) {
+            const larva = createLarvaParticle(matlabColor);
             
-            // Genotype container (larger sphere)
-            const genotypeGeo = new THREE.SphereGeometry(0.8, 16, 16);
-            const genotypeMat = new THREE.MeshStandardMaterial({
-                color: matlabColors[0],
-                emissive: matlabColors[0],
-                emissiveIntensity: 0.3,
-                metalness: 0.8,
-                roughness: 0.2
+            // Position above title in a spread pattern
+            const angle = (i / larvaCount) * Math.PI * 2;
+            const radius = 3 + Math.random() * 2;
+            larva.position.set(
+                Math.cos(angle) * radius,
+                8 + Math.sin(angle) * radius * 0.3 + (Math.random() - 0.5) * 2,
+                -5 + (Math.random() - 0.5) * 2
+            );
+            
+            // Add random rotation
+            larva.rotation.z = Math.random() * Math.PI * 2;
+            
+            // Make more transparent
+            larva.children.forEach(child => {
+                if (child.material) {
+                    child.material.opacity = 0.4;
+                    child.material.transparent = true;
+                }
             });
-            const genotype = new THREE.Mesh(genotypeGeo, genotypeMat);
-            group.add(genotype);
             
-            // ESET structures inside genotype (spheres)
-            for (let e = 0; e < 3; e++) {
-                const esetGeo = new THREE.SphereGeometry(0.3, 12, 12);
-                const esetMat = new THREE.MeshStandardMaterial({
-                    color: matlabColors[1],
-                    emissive: matlabColors[1],
-                    emissiveIntensity: 0.2,
-                    metalness: 0.7,
-                    roughness: 0.3
-                });
-                const eset = new THREE.Mesh(esetGeo, esetMat);
-                eset.position.set(
-                    (e - 1) * 0.8,
-                    (e % 2) * 0.8 - 0.4,
-                    (e - 1) * 0.3
-                );
-                group.add(eset);
-                
-                // Store for particle emission
-                matlabStructures.push({
-                    mesh: eset,
-                    type: 'eset',
-                    group: group,
-                    lastEmission: 0
-                });
-            }
+            scene.add(larva);
+            matlabLarvae.push(larva);
             
-            scene.add(group);
-            structureGroups.push(group);
+            // Store for particle emission
+            matlabStructures.push({
+                mesh: larva,
+                type: 'larva',
+                group: null,
+                lastEmission: 0
+            });
         }
 
         updateLoading(60);
@@ -561,15 +550,20 @@
             const elapsedTime = clock.getElapsedTime();
             const delta = clock.getDelta();
 
-            // Animate MATLAB structures (hierarchical grouping)
-            structureGroups.forEach((group, gIdx) => {
-                group.rotation.y += 0.002;
-                group.position.y += Math.sin(elapsedTime * 0.5 + gIdx) * 0.01;
+            // Animate MATLAB larvae above title
+            matlabLarvae.forEach((larva, idx) => {
+                // Gentle floating motion
+                larva.position.y += Math.sin(elapsedTime * 0.5 + idx) * 0.01;
+                larva.position.x += Math.cos(elapsedTime * 0.3 + idx) * 0.005;
                 
-                group.children.forEach((child, cIdx) => {
-                    if (child.geometry && child.geometry.type === 'SphereGeometry') {
-                        child.rotation.x += 0.01;
-                        child.rotation.y += 0.01;
+                // Slow rotation
+                larva.rotation.z += 0.002;
+                
+                // Gentle pulsing opacity
+                const pulse = 0.4 + Math.sin(elapsedTime * 2 + idx) * 0.1;
+                larva.children.forEach(child => {
+                    if (child.material) {
+                        child.material.opacity = pulse;
                     }
                 });
             });
@@ -674,26 +668,19 @@
                 });
             });
 
-            // Apply wind force to MATLAB structures
-            structureGroups.forEach((group) => {
-                const groupWorldPos = new THREE.Vector3();
-                group.getWorldPosition(groupWorldPos);
+            // Apply wind force to MATLAB larvae
+            matlabLarvae.forEach((larva) => {
+                const larvaWorldPos = new THREE.Vector3();
+                larva.getWorldPosition(larvaWorldPos);
+                const distance = larvaWorldPos.distanceTo(mouseWorldPos);
                 
-                group.children.forEach((child) => {
-                    if (child.geometry && child.geometry.type === 'SphereGeometry') {
-                        const childWorldPos = new THREE.Vector3();
-                        child.getWorldPosition(childWorldPos);
-                        const distance = childWorldPos.distanceTo(mouseWorldPos);
-                        
-                        if (distance < windRadius && distance > 0.1) {
-                            const force = (1 - distance / windRadius) * windStrength * delta;
-                            const direction = new THREE.Vector3()
-                                .subVectors(childWorldPos, mouseWorldPos)
-                                .normalize();
-                            child.position.add(direction.multiplyScalar(force));
-                        }
-                    }
-                });
+                if (distance < windRadius && distance > 0.1) {
+                    const force = (1 - distance / windRadius) * windStrength * delta;
+                    const direction = new THREE.Vector3()
+                        .subVectors(larvaWorldPos, mouseWorldPos)
+                        .normalize();
+                    larva.position.add(direction.multiplyScalar(force));
+                }
             });
 
             // Apply wind force to H5 structures
