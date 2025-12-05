@@ -1,15 +1,32 @@
 # MATLAB to H5 Conversion Tools
 
-This directory contains tools for converting MATLAB experiment data (ESET format) to H5 files compatible with `scripts/engineer_dataset_from_h5.py`.
+This directory contains tools for converting MATLAB experiment data (ESET format) to H5 files compatible with the analysis scripts in `scripts/analysis/`.
 
-## Folder Structure
+## Scripts
 
-```
-src/@matlab_conversion/
-├── convert_matlab_to_h5.py    # Main conversion script
-├── process_all_esets.bat      # Batch process all ESET folders
-├── process_single_eset.bat    # Process single ESET folder
-└── README.md                   # This file
+- `convert_matlab_to_h5.py` - Main conversion script (exports complete MAGAT structure)
+- `batch_export_esets.py` - Batch process multiple ESET directories
+- `append_camcal_to_h5.py` - Add camera calibration to existing H5 files
+- `unlock_h5_file.py` - Utility to unlock locked H5 files
+
+## Usage
+
+These scripts are typically called by the main `mat2h5.py` tool, but can also be used directly:
+
+```bash
+# Single experiment conversion
+python scripts/conversion/convert_matlab_to_h5.py \
+    --mat /path/to/experiment.mat \
+    --tracks /path/to/tracks \
+    --bin /path/to/experiment.bin \
+    --output /path/to/output.h5 \
+    --codebase /path/to/MAGAT/codebase
+
+# Batch conversion
+python scripts/conversion/batch_export_esets.py \
+    --root-dir /path/to/GMR61@GMR61 \
+    --output-dir /path/to/h5_output \
+    --codebase /path/to/MAGAT/codebase
 ```
 
 ## ESET Folder Structure

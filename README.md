@@ -179,18 +179,36 @@ Ensure your data folder contains subdirectories with `matfiles/` folders contain
 ```
 mat2h5/
 ├── README.md                    # This file
+├── LICENSE                      # MIT License
 ├── requirements.txt             # Python dependencies
 ├── install.py                   # Installation script
-├── mat2h5.py                   # Main entry point
-├── magat_bridge.py             # MAGAT Bridge (included, no external dependency)
-├── h5_export/                   # Conversion scripts
-│   ├── convert_matlab_to_h5.py # Core conversion logic
-│   └── batch_export_esets.py   # Batch processing
-└── validation/                  # Validation tools (optional)
-    └── ...
+├── mat2h5.py                   # Main entry point (CLI tool)
+│
+├── mat2h5/                      # Package directory
+│   ├── __init__.py             # Package initialization
+│   └── bridge.py               # MAGAT Bridge (MATLAB interface)
+│
+├── scripts/                     # User-facing scripts
+│   ├── conversion/              # MATLAB → H5 conversion tools
+│   │   ├── convert_matlab_to_h5.py    # Core conversion logic
+│   │   ├── batch_export_esets.py      # Batch processing
+│   │   ├── append_camcal_to_h5.py     # Camera calibration
+│   │   └── unlock_h5_file.py          # H5 file utilities
+│   └── analysis/                # H5 analysis scripts
+│       ├── engineer_data.py           # Basic analysis
+│       └── engineer_dataset_from_h5.py # Enhanced analysis
+│
+├── validation/                  # Validation framework (optional)
+│   ├── matlab/                 # MATLAB reference scripts
+│   ├── python/                 # Python validation scripts
+│   └── README.md               # Validation documentation
+│
+└── docs/                        # Additional documentation
+    ├── SETUP_REMOTE.md         # Remote repository setup
+    └── REPO_DESCRIPTION.md     # Repository description
 ```
 
-**Note:** The MAGAT Bridge code is included directly in `magat_bridge.py`, so you don't need any external dependencies beyond MATLAB and the MAGAT codebase.
+**Note:** The MAGAT Bridge code is included in `mat2h5/bridge.py`, so you don't need any external dependencies beyond MATLAB and the MAGAT codebase.
 
 ## Advanced Usage
 
@@ -211,7 +229,7 @@ For issues or questions:
 
 ## License
 
-[Add license information]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 

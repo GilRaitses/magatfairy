@@ -20,20 +20,15 @@ import numpy as np
 import h5py
 import os
 
-# Import MAGAT Bridge from local mat2h5 package
-# Try to import from parent directory (mat2h5 root)
-mat2h5_root = Path(__file__).parent.parent
-magat_bridge_path = mat2h5_root / "magat_bridge.py"
-
-if not magat_bridge_path.exists():
-    raise FileNotFoundError(
-        f"MAGAT Bridge not found: {magat_bridge_path}\n"
-        f"This file should be included in the mat2h5 package."
-    )
-
-# Add parent directory to path and import
+# Import MAGAT Bridge from mat2h5 package
+mat2h5_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(mat2h5_root))
-from magat_bridge import MAGATBridge
+
+try:
+    from mat2h5.bridge import MAGATBridge
+except ImportError:
+    # Fallback for direct execution
+    from mat2h5 import MAGATBridge
 
 
 def export_tier2_magat(bridge, output_file):
