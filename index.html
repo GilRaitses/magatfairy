@@ -297,11 +297,12 @@
         const matlabStructures = [];
         const structureGroups = [];
 
-        // Create genotype groups (left side)
+        // Create genotype groups (above title)
         for (let g = 0; g < 2; g++) {
             const group = new THREE.Group();
-            group.position.x = -12 + g * 2;
-            group.position.y = (g - 0.5) * 4;
+            group.position.x = (g - 0.5) * 3;
+            group.position.y = 8; // Above the title
+            group.position.z = -5;
             
             // Genotype container (larger sphere)
             const genotypeGeo = new THREE.SphereGeometry(0.8, 16, 16);
@@ -348,10 +349,11 @@
 
         updateLoading(60);
 
-        // H5 side: Boid swarms shaped like larvae (right side)
+        // H5 side: Biased random walk clusters shaped like larvae (right side)
         const h5Structures = [];
         const h5Tree = new THREE.Group();
         h5Tree.position.x = 12;
+        h5Tree.position.y = 0;
 
         // Create boid swarm system for larvae
         const boidCount = 15;
@@ -387,13 +389,22 @@
             return larvaGroup;
         }
         
-        // Initialize boids
+        // Initialize larvae in clusters
+        const clusterCenters = [
+            new THREE.Vector3(10, 3, 0),
+            new THREE.Vector3(12, -2, 0),
+            new THREE.Vector3(14, 1, 0)
+        ];
+        
         for (let i = 0; i < boidCount; i++) {
             const larva = createLarvaShape();
+            // Assign to random cluster
+            const clusterIdx = Math.floor(Math.random() * clusterCenters.length);
+            const center = clusterCenters[clusterIdx];
             larva.position.set(
-                (Math.random() - 0.5) * 4,
-                (Math.random() - 0.5) * 4,
-                (Math.random() - 0.5) * 2
+                center.x + (Math.random() - 0.5) * 2,
+                center.y + (Math.random() - 0.5) * 2,
+                center.z + (Math.random() - 0.5) * 1
             );
             
             const boid = {
@@ -563,92 +574,93 @@
                 });
             });
 
-            // Animate H5 boid swarms (larvae)
-            const boidSeparation = 1.5;
-            const boidAlignment = 0.5;
-            const boidCohesion = 0.3;
-            const boidSpeed = 0.02;
-            const boidRadius = 3;
+            // Animate H5 biased random walk clusters (larvae)
+            const clusterRadius = 4;
+            const randomWalkStrength = 0.02;
+            const biasStrength = 0.01;
+            const clusterCenters = [
+                new THREE.Vector3(10, 3, 0),
+                new THREE.Vector3(12, -2, 0),
+                new THREE.Vector3(14, 1, 0)
+            ];
             
+            // Group larvae into clusters
+            const clusters = [];
+            clusterCenters.forEach((center, cIdx) => {
+                clusters.push({
+                    center: center,
+                    members: []
+                });
+            });
+            
+            // Assign larvae to nearest cluster
             h5Structures.forEach((struct, idx) => {
                 if (struct.boid) {
+                    let nearestCluster = 0;
+                    let nearestDist = Infinity;
+                    clusterCenters.forEach((center, cIdx) => {
+                        const dist = struct.boid.position.distanceTo(center);
+                        if (dist < nearestDist) {
+                            nearestDist = dist;
+                            nearestCluster = cIdx;
+                        }
+                    });
+                    clusters[nearestCluster].members.push(struct);
+                }
+            });
+            
+            // Update each cluster with biased random walk
+            clusters.forEach((cluster, cIdx) => {
+                // Update cluster center with random walk
+                const randomStep = new THREE.Vector3(
+                    (Math.random() - 0.5) * randomWalkStrength,
+                    (Math.random() - 0.5) * randomWalkStrength,
+                    (Math.random() - 0.5) * randomWalkStrength * 0.5
+                );
+                cluster.center.add(randomStep);
+                
+                // Bias cluster center back toward origin area
+                const bias = cluster.center.clone().multiplyScalar(-biasStrength);
+                cluster.center.add(bias);
+                
+                // Update each member of cluster
+                cluster.members.forEach((struct) => {
                     const boid = struct.boid;
-                    const center = new THREE.Vector3(0, 0, 0);
                     
-                    // Separation: avoid neighbors
-                    const separation = new THREE.Vector3();
-                    let neighborCount = 0;
-                    h5Structures.forEach((other, oIdx) => {
-                        if (other.boid && idx !== oIdx) {
-                            const dist = boid.position.distanceTo(other.boid.position);
-                            if (dist < boidSeparation) {
-                                const diff = new THREE.Vector3()
-                                    .subVectors(boid.position, other.boid.position)
-                                    .normalize()
-                                    .divideScalar(dist);
-                                separation.add(diff);
-                                neighborCount++;
-                            }
-                        }
-                    });
-                    if (neighborCount > 0) {
-                        separation.divideScalar(neighborCount);
-                        separation.normalize();
-                        separation.multiplyScalar(boidSpeed);
-                    }
+                    // Random walk component
+                    const randomWalk = new THREE.Vector3(
+                        (Math.random() - 0.5) * randomWalkStrength * 2,
+                        (Math.random() - 0.5) * randomWalkStrength * 2,
+                        (Math.random() - 0.5) * randomWalkStrength
+                    );
                     
-                    // Alignment: match neighbor velocities
-                    const alignment = new THREE.Vector3();
-                    neighborCount = 0;
-                    h5Structures.forEach((other, oIdx) => {
-                        if (other.boid && idx !== oIdx) {
-                            const dist = boid.position.distanceTo(other.boid.position);
-                            if (dist < boidSeparation * 2) {
-                                alignment.add(other.boid.velocity);
-                                neighborCount++;
-                            }
-                        }
-                    });
-                    if (neighborCount > 0) {
-                        alignment.divideScalar(neighborCount);
-                        alignment.normalize();
-                        alignment.multiplyScalar(boidSpeed * boidAlignment);
-                    }
+                    // Bias toward cluster center
+                    const toCenter = new THREE.Vector3()
+                        .subVectors(cluster.center, boid.position)
+                        .normalize()
+                        .multiplyScalar(biasStrength * 5);
                     
-                    // Cohesion: move toward center of neighbors
-                    const cohesion = new THREE.Vector3();
-                    neighborCount = 0;
-                    h5Structures.forEach((other, oIdx) => {
-                        if (other.boid && idx !== oIdx) {
-                            const dist = boid.position.distanceTo(other.boid.position);
-                            if (dist < boidSeparation * 2) {
-                                cohesion.add(other.boid.position);
-                                neighborCount++;
-                            }
-                        }
-                    });
-                    if (neighborCount > 0) {
-                        cohesion.divideScalar(neighborCount);
-                        cohesion.sub(boid.position);
-                        cohesion.normalize();
-                        cohesion.multiplyScalar(boidSpeed * boidCohesion);
-                    }
+                    // Combine forces
+                    boid.velocity.add(randomWalk);
+                    boid.velocity.add(toCenter);
                     
-                    // Apply forces
-                    boid.velocity.add(separation);
-                    boid.velocity.add(alignment);
-                    boid.velocity.add(cohesion);
+                    // Damping
+                    boid.velocity.multiplyScalar(0.95);
                     
                     // Limit speed
-                    if (boid.velocity.length() > boidSpeed) {
-                        boid.velocity.normalize().multiplyScalar(boidSpeed);
+                    const maxSpeed = 0.05;
+                    if (boid.velocity.length() > maxSpeed) {
+                        boid.velocity.normalize().multiplyScalar(maxSpeed);
                     }
                     
-                    // Keep within radius
-                    const distFromCenter = boid.position.length();
-                    if (distFromCenter > boidRadius) {
-                        const toCenter = boid.position.clone().normalize().multiplyScalar(-0.01);
-                        boid.velocity.add(toCenter);
+                    // Keep within cluster radius
+                    const distFromCenter = boid.position.distanceTo(cluster.center);
+                    if (distFromCenter > clusterRadius) {
+                        const backToCenter = new THREE.Vector3()
+                            .subVectors(cluster.center, boid.position)
+                            .normalize()
+                            .multiplyScalar(0.02);
+                        boid.velocity.add(backToCenter);
                     }
                     
                     // Update position
@@ -659,7 +671,7 @@
                     if (boid.velocity.length() > 0.001) {
                         struct.mesh.lookAt(boid.position.clone().add(boid.velocity));
                     }
-                }
+                });
             });
 
             // Apply wind force to MATLAB structures
