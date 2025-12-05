@@ -53,7 +53,7 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            display: flex;
+            display: flex !important;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -62,8 +62,8 @@
 
         #main-fairy-background .fairy-container {
             position: relative;
-            display: inline-block;
-            opacity: 0.4;
+            display: inline-block !important;
+            opacity: 0.5;
             mix-blend-mode: multiply;
         }
 
@@ -463,6 +463,9 @@
         }
         if (mainFairyArt) {
             mainFairyArt.textContent = fairyASCII;
+            console.log('Main fairy art populated');
+        } else {
+            console.log('Main fairy art element not found');
         }
         
         let loadingStartTime = Date.now();
