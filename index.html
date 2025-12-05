@@ -168,6 +168,19 @@
             to { opacity: 1; }
         }
 
+        .loading-progress-text {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #000;
+            z-index: 3;
+            text-shadow: 0 0 3px rgba(127, 255, 0, 0.5);
+            opacity: 0.8;
+        }
+
         .fairy-gradient {
             position: absolute;
             top: 0;
@@ -234,6 +247,7 @@
         <div class="fairy-container">
             <div class="fairy-gradient"></div>
             <div class="fairy-art" id="fairy-art"></div>
+            <div class="loading-progress-text" id="loading-progress-text">Loading...</div>
         </div>
     </div>
 
@@ -274,6 +288,7 @@
         // Loading progress
         const loadingScreen = document.getElementById('loading-screen');
         const fairyArt = document.getElementById('fairy-art');
+        const loadingProgressText = document.getElementById('loading-progress-text');
         
         // Load fairy ASCII art
         const fairyASCII = `⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -357,11 +372,16 @@
         }
         
         function updateLoading(percent) {
+            // Update progress text
+            if (loadingProgressText) {
+                loadingProgressText.textContent = `Loading... ${Math.round(percent)}%`;
+            }
+            
             // Update gradient rotation based on loading progress
             const gradient = document.querySelector('.fairy-gradient');
             if (gradient) {
                 const rotation = (percent / 100) * 360;
-                gradient.style.transform = `rotate(${rotation}deg)`;
+                gradient.style.transform = `translate(-25%, -25%) rotate(${rotation}deg)`;
             }
             if (percent >= 100 && loadingScreen) {
                 setTimeout(() => {
