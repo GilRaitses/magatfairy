@@ -476,9 +476,10 @@
 
         updateLoading(80);
 
-        // Post-processing
+        // Post-processing - ensure transparency
         const composer = new EffectComposer(renderer);
         const renderPass = new RenderPass(scene, camera);
+        renderPass.clear = false; // Don't clear, let background show through
         composer.addPass(renderPass);
 
         const bloomPass = new UnrealBloomPass(
@@ -491,6 +492,9 @@
 
         const outputPass = new OutputPass();
         composer.addPass(outputPass);
+        
+        // Force renderer to not clear with black
+        renderer.autoClear = false;
 
         updateLoading(90);
 
@@ -790,6 +794,10 @@
             camera.position.y += Math.cos(elapsedTime * 0.15) * 0.01;
 
             controls.update();
+            
+            // Clear with transparent background
+            renderer.setClearColor(0x000000, 0);
+            renderer.clear();
             composer.render();
         }
 
