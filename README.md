@@ -12,11 +12,11 @@ This tool is designed for researchers who:
 
 ## Quick Start
 
-### 1. Clone mat2h5
+### 1. Clone magatfairy
 
 ```bash
-git clone https://github.com/GilRaitses/mat2h5.git
-cd mat2h5
+git clone https://github.com/GilRaitses/magatfairy.git
+cd magatfairy
 ```
 
 ### 2. Install Dependencies
@@ -42,7 +42,7 @@ See: https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-en
 ### 3. Run the Conversion Tool
 
 ```bash
-python mat2h5.py
+python magatfairy.py
 ```
 
 The tool will guide you through:
@@ -59,7 +59,7 @@ The tool will guide you through:
 - **MAGAT Codebase** - Can be cloned automatically or provided manually
 
 ### Optional
-- **Git** - Required for automatic codebase cloning (if you cloned mat2h5, you have git!)
+- **Git** - Required for automatic codebase cloning (if you cloned magatfairy, you have git!)
 
 ## MAGAT Codebase
 
@@ -75,7 +75,7 @@ If git is installed, the tool can clone it automatically:
 
 If you already have the codebase:
 1. Clone manually: `git clone https://github.com/samuellab/MAGATAnalyzer-Matlab-Analysis.git`
-2. Provide the path when prompted by `mat2h5.py`
+2. Provide the path when prompted by `magatfairy.py`
 
 ## Data Structure
 
@@ -128,7 +128,7 @@ Each H5 file contains:
 ### Process Root Folder with Multiple ESETs
 
 ```bash
-python mat2h5.py
+python magatfairy.py
 # Select: Process multiple ESETs
 # Enter: /path/to/GMR61@GMR61/
 # Output: /path/to/h5_output/
@@ -137,7 +137,7 @@ python mat2h5.py
 ### Process Single ESET
 
 ```bash
-python mat2h5.py
+python magatfairy.py
 # Select: Process single ESET
 # Enter: /path/to/T_Re_Sq_0to250PWM_30#C_Bl_7PWM/
 # Output: /path/to/h5_output/
@@ -182,7 +182,7 @@ mat2h5/
 ├── LICENSE                      # MIT License
 ├── requirements.txt             # Python dependencies
 ├── install.py                   # Installation script
-├── mat2h5.py                   # Main entry point (CLI tool)
+├── magatfairy.py               # Main entry point (CLI tool)
 │
 ├── src/                         # Source code
 │   ├── mat2h5/                 # Core package (stable API)
@@ -216,10 +216,10 @@ mat2h5 provides a CLI with subcommands for all operations:
 
 #### Quick Start: Click-and-Go (Easiest!)
 
-**macOS/Linux:** Double-click `mat2h5.command` (or `mat2h5.sh`)  
-**Windows:** Double-click `mat2h5.bat`
+**macOS/Linux:** Double-click `magatfairy.command` (or `magatfairy.sh`)  
+**Windows:** Double-click `magatfairy.bat`
 
-This opens a terminal window. Drag your data folder into it and press Enter. H5 files will be saved to `exports/` folder in the mat2h5 repository.
+This opens a terminal window. Drag your data folder into it and press Enter. H5 files will be saved to `exports/` folder in the magatfairy repository.
 
 #### Command-Line: Auto-Detect (Drag-and-Drop)
 
@@ -245,23 +245,23 @@ You'll be prompted for:
 
 ```bash
 # Conversion commands
-mat2h5 convert batch --root-dir /path/to/data --output-dir /path/to/output --codebase /path/to/magat
-mat2h5 convert single --mat file.mat --output file.h5 --codebase /path/to/magat
-mat2h5 convert append-camcal --eset-dir /path/to/eset
-mat2h5 convert unlock --file file.h5
+magatfairy convert batch --root-dir /path/to/data --output-dir /path/to/output --codebase /path/to/magat
+magatfairy convert single --mat file.mat --output file.h5 --codebase /path/to/magat
+magatfairy convert append-camcal --eset-dir /path/to/eset
+magatfairy convert unlock --file file.h5
 
 # Analysis commands
-mat2h5 analyze engineer --h5 file.h5
-mat2h5 analyze dataset --h5 file.h5
+magatfairy analyze engineer --h5 file.h5
+magatfairy analyze dataset --h5 file.h5
 
 # Validation commands
-mat2h5 validate schema --h5 file.h5
-mat2h5 validate integrity --mat file.mat --h5 file.h5
-mat2h5 validate full --base-dir /path/to/data
+magatfairy validate schema --h5 file.h5
+magatfairy validate integrity --mat file.mat --h5 file.h5
+magatfairy validate full --base-dir /path/to/data
 
 # Help
-mat2h5 --help
-mat2h5 convert --help
+magatfairy --help
+magatfairy convert --help
 ```
 
 Scripts can also be run directly:
@@ -274,9 +274,9 @@ python src/scripts/convert/batch_export_esets.py --root-dir /path/to/data --outp
 Save your MAGAT codebase path to avoid entering it every time:
 
 ```bash
-mat2h5 config set magat_codebase /path/to/magat
-mat2h5 config set default_output /path/to/exports
-mat2h5 config show  # View all settings
+magatfairy config set magat_codebase /path/to/magat
+magatfairy config set default_output /path/to/exports
+magatfairy config show  # View all settings
 ```
 
 ## Troubleshooting
@@ -290,7 +290,7 @@ mat2h5 config show  # View all settings
 - See: https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
 
 ### Conversion Fails
-- Check that MAGAT codebase path is correct: `mat2h5 config get magat_codebase`
+- Check that MAGAT codebase path is correct: `magatfairy config get magat_codebase`
 - Verify MATLAB can access the codebase
 - Check log file: `exports/conversion.log`
 
