@@ -101,103 +101,28 @@
         .btn {
             padding: 0.75rem 2rem;
             font-size: 1rem;
-            border: 2px solid #667eea;
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
+            border: 2px solid #000000;
+            background: transparent;
+            color: #000000;
             text-decoration: none;
             transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            transform-style: preserve-3d;
         }
 
         .btn:hover {
-            background: rgba(102, 126, 234, 0.3);
-            transform: translateY(-2px) rotateX(5deg);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
+            background: transparent;
+            color: #000000;
+            border: 2px solid #000000;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background: rgba(0, 0, 0, 0.1);
         }
 
 
-        .mailing-list {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            max-width: 500px;
-            animation: fadeInUp 1s ease 1.3s both;
-            border: 2px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .mailing-list h3 {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: #000000;
-        }
-
-        .mailing-list p {
-            font-size: 0.9rem;
-            color: #333333;
-            margin-bottom: 1rem;
-        }
-
-        .email-form {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .email-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 0.75rem;
-            font-size: 1rem;
-            border: 2px solid #667eea;
-            background: white;
-            color: #000000;
-        }
-
-        .email-input:focus {
-            outline: none;
-            border-color: #764ba2;
-        }
-
-        .email-submit {
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            border: none;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .email-submit:hover {
-            transform: translateY(-2px);
-        }
-
-        .success-message {
-            display: none;
-            padding: 1rem;
-            background: rgba(102, 126, 234, 0.1);
-            border: 2px solid #667eea;
-            color: #000000;
-            margin-top: 1rem;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        .success-message.show {
-            display: block;
-        }
 
         .narrative-labels {
             position: absolute;
@@ -327,23 +252,6 @@
             <a href="https://github.com/GilRaitses/mat2h5/blob/main/README.md" class="btn">Documentation</a>
         </div>
 
-        <div class="mailing-list">
-            <h3>Stay Updated</h3>
-            <p>Get notified about new features, updates, and tips for using mat2h5.</p>
-            <form class="email-form" id="mailing-form" onsubmit="handleEmailSubmit(event)">
-                <input 
-                    type="email" 
-                    class="email-input" 
-                    placeholder="Enter your email"
-                    required
-                    id="email-input"
-                />
-                <button type="submit" class="email-submit">Subscribe</button>
-            </form>
-            <div class="success-message" id="success-message">
-                ✓ Thanks for subscribing! Check your email to confirm.
-            </div>
-        </div>
     </div>
 
     <script type="importmap">
@@ -829,48 +737,6 @@
                 loadingScreen.classList.add('hidden');
             }
         });
-
-        // Mailing list form handler
-        function handleEmailSubmit(event) {
-            event.preventDefault();
-            const emailInput = document.getElementById('email-input');
-            const successMessage = document.getElementById('success-message');
-            const email = emailInput.value.trim();
-            
-            // Basic email validation
-            if (!email || !email.includes('@')) {
-                alert('Please enter a valid email address');
-                return;
-            }
-            
-            // Here you would typically send to your backend/email service
-            // For now, we'll just show success message
-            // Example: fetch('/api/subscribe', { method: 'POST', body: JSON.stringify({ email }) })
-            
-            // Show success message
-            successMessage.classList.add('show');
-            emailInput.value = '';
-            
-            // Optional: Send to a service like Formspree, Mailchimp, etc.
-            // For GitHub Pages, you could use Formspree or similar service
-            fetch('https://formspree.io/f/YOUR_FORM_ID', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    _subject: 'New mat2h5 Mailing List Signup'
-                })
-            }).catch(err => {
-                console.log('Form submission error (this is expected if Formspree not configured):', err);
-            });
-            
-            // Hide success message after 5 seconds
-            setTimeout(() => {
-                successMessage.classList.remove('show');
-            }, 5000);
-        }
     </script>
 </body>
 </html>
