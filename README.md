@@ -200,12 +200,11 @@ mat2h5/
 │
 ├── validation/                  # Validation framework (optional)
 │   ├── matlab/                 # MATLAB reference scripts
-│   ├── python/                 # Python validation scripts
-│   └── README.md               # Validation documentation
+│   └── python/                 # Python validation scripts
 │
 └── docs/                        # Additional documentation
-    ├── SETUP_REMOTE.md         # Remote repository setup
-    └── REPO_DESCRIPTION.md     # Repository description
+    ├── field-mapping.md        # MATLAB to H5 field reference
+    └── magat-license.md        # MAGAT Analyzer license info
 ```
 
 **Note:** The MAGAT Bridge code is included in `mat2h5/bridge.py`, so you don't need any external dependencies beyond MATLAB and the MAGAT codebase.
@@ -224,7 +223,7 @@ python mat2h5.py --root-dir /path/to/data --output /path/to/output --codebase /p
 
 For issues or questions:
 - Check the troubleshooting section above
-- Review the validation documentation in `validation/README.md`
+- Review field mapping reference: `docs/field-mapping.md`
 - Check MATLAB Engine installation: https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html
 
 ## License
