@@ -48,11 +48,18 @@
             font-size: 4rem;
             font-weight: 700;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6b35 0%, #667eea 50%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
             text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .subtitle {
@@ -60,6 +67,18 @@
             margin-bottom: 2rem;
             color: #a0aec0;
             font-weight: 300;
+            animation: fadeInUp 1s ease 0.5s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .description {
@@ -68,6 +87,7 @@
             margin-bottom: 2rem;
             color: #cbd5e0;
             line-height: 1.6;
+            animation: fadeInUp 1s ease 0.7s both;
         }
 
         .buttons {
@@ -75,6 +95,7 @@
             gap: 1rem;
             flex-wrap: wrap;
             justify-content: center;
+            animation: fadeInUp 1s ease 0.9s both;
         }
 
         .btn {
@@ -87,11 +108,12 @@
             border-radius: 8px;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
         }
 
         .btn:hover {
             background: rgba(102, 126, 234, 0.3);
-            transform: translateY(-2px);
+            transform: translateY(-2px) rotateX(5deg);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
 
@@ -111,6 +133,7 @@
             gap: 1.5rem;
             margin-top: 3rem;
             max-width: 800px;
+            animation: fadeInUp 1s ease 1.1s both;
         }
 
         .feature {
@@ -123,7 +146,7 @@
         }
 
         .feature:hover {
-            transform: translateY(-5px);
+            transform: translateY(-5px) translateZ(10px);
             background: rgba(255, 255, 255, 0.08);
         }
 
@@ -144,6 +167,86 @@
             color: #a0aec0;
         }
 
+        .narrative-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .label {
+            position: absolute;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: fadeIn 2s ease 2s both;
+        }
+
+        .label.matlab {
+            left: 10%;
+            top: 50%;
+            color: #ff6b35;
+        }
+
+        .label.conversion {
+            left: 50%;
+            top: 20%;
+            transform: translateX(-50%);
+            color: #fbbf24;
+        }
+
+        .label.h5 {
+            right: 10%;
+            top: 50%;
+            color: #667eea;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0e27;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b35 0%, #667eea 50%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
@@ -154,18 +257,35 @@
             .description {
                 font-size: 1rem;
             }
+            .label {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.8rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div id="loading-screen">
+        <div style="font-size: 1.5rem; margin-bottom: 1rem;">Loading mat2h5...</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+    </div>
+
     <div id="canvas-container"></div>
+    
+    <div class="narrative-labels">
+        <div class="label matlab">MATLAB Data</div>
+        <div class="label conversion">Conversion Pipeline</div>
+        <div class="label h5">H5 Format</div>
+    </div>
     
     <div id="content">
         <h1>mat2h5</h1>
         <p class="subtitle">MATLAB to H5 Conversion Tool</p>
         <p class="description">
-            A standalone tool for converting MAGAT (MATLAB Track Analysis) experiment data 
-            to H5 format for use in Python analysis pipelines.
+            Transform your MAGAT experiment data from MATLAB's structured format 
+            into Python-ready H5 files. Watch the data flow through our conversion pipeline.
         </p>
         
         <div class="buttons">
@@ -182,18 +302,18 @@
             </div>
             <div class="feature">
                 <div class="feature-icon">⚡</div>
-                <div class="feature-title">Interactive</div>
-                <div class="feature-desc">Guided setup and conversion workflow</div>
+                <div class="feature-title">Batch Processing</div>
+                <div class="feature-desc">Process entire genotypes and ESETs</div>
             </div>
             <div class="feature">
                 <div class="feature-icon">🔄</div>
-                <div class="feature-title">Batch Processing</div>
-                <div class="feature-desc">Process multiple ESET directories</div>
+                <div class="feature-title">Auto-Detection</div>
+                <div class="feature-desc">Smart data type recognition</div>
             </div>
             <div class="feature">
                 <div class="feature-icon">✅</div>
                 <div class="feature-title">Validated</div>
-                <div class="feature-desc">Complete validation framework included</div>
+                <div class="feature-desc">Complete validation framework</div>
             </div>
         </div>
     </div>
@@ -209,149 +329,407 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+        // Loading progress
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingProgress = document.getElementById('loading-progress');
+        
+        function updateLoading(percent) {
+            loadingProgress.style.width = percent + '%';
+            if (percent >= 100) {
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                }, 500);
+            }
+        }
+
+        updateLoading(20);
 
         // Scene setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // Camera position
-        camera.position.set(0, 0, 15);
+        updateLoading(40);
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        // Camera position - view the data flow from side
+        camera.position.set(0, 5, 20);
+        camera.lookAt(0, 0, 0);
+
+        // Lighting - two-tone (warm left, cool right)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
         scene.add(ambientLight);
 
-        const pointLight1 = new THREE.PointLight(0x667eea, 1, 100);
-        pointLight1.position.set(10, 10, 10);
-        scene.add(pointLight1);
+        // Warm light for MATLAB side (left)
+        const matlabLight = new THREE.PointLight(0xff6b35, 1.5, 30);
+        matlabLight.position.set(-15, 5, 0);
+        scene.add(matlabLight);
 
-        const pointLight2 = new THREE.PointLight(0x764ba2, 1, 100);
-        pointLight2.position.set(-10, -10, -10);
-        scene.add(pointLight2);
+        // Cool light for H5 side (right)
+        const h5Light = new THREE.PointLight(0x667eea, 1.5, 30);
+        h5Light.position.set(15, 5, 0);
+        scene.add(h5Light);
 
-        // Create floating blocks
-        const blocks = [];
-        const blockCount = 12;
-        const colors = [0x667eea, 0x764ba2, 0xf093fb, 0x4facfe];
+        // Conversion zone light (center)
+        const conversionLight = new THREE.SpotLight(0xfbbf24, 2, 20, Math.PI / 4, 0.5);
+        conversionLight.position.set(0, 10, 0);
+        conversionLight.target.position.set(0, 0, 0);
+        scene.add(conversionLight);
+        scene.add(conversionLight.target);
 
-        for (let i = 0; i < blockCount; i++) {
-            const size = Math.random() * 0.8 + 0.4;
-            const geometry = new THREE.BoxGeometry(size, size, size);
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            const material = new THREE.MeshStandardMaterial({
-                color: color,
-                emissive: color,
+        updateLoading(50);
+
+        // Color schemes
+        const matlabColors = [0xff6b35, 0xff8c42, 0xffa07a]; // Orange/red
+        const h5Colors = [0x667eea, 0x764ba2, 0x9b59b6]; // Purple/blue
+        const conversionColors = [0xfbbf24, 0xf59e0b, 0xf97316]; // Yellow/orange
+
+        // MATLAB side: Hierarchical data structures (genotype → ESET → experiment)
+        const matlabStructures = [];
+        const structureGroups = [];
+
+        // Create genotype groups (left side)
+        for (let g = 0; g < 2; g++) {
+            const group = new THREE.Group();
+            group.position.x = -12 + g * 2;
+            group.position.y = (g - 0.5) * 4;
+            
+            // Genotype container (larger cube)
+            const genotypeGeo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+            const genotypeMat = new THREE.MeshStandardMaterial({
+                color: matlabColors[0],
+                emissive: matlabColors[0],
                 emissiveIntensity: 0.3,
-                metalness: 0.7,
-                roughness: 0.3,
-                transparent: true,
-                opacity: 0.9
+                metalness: 0.8,
+                roughness: 0.2
             });
+            const genotype = new THREE.Mesh(genotypeGeo, genotypeMat);
+            group.add(genotype);
             
-            const block = new THREE.Mesh(geometry, material);
+            // ESET structures inside genotype
+            for (let e = 0; e < 3; e++) {
+                const esetGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+                const esetMat = new THREE.MeshStandardMaterial({
+                    color: matlabColors[1],
+                    emissive: matlabColors[1],
+                    emissiveIntensity: 0.2,
+                    metalness: 0.7,
+                    roughness: 0.3
+                });
+                const eset = new THREE.Mesh(esetGeo, esetMat);
+                eset.position.set(
+                    (e - 1) * 0.8,
+                    (e % 2) * 0.8 - 0.4,
+                    (e - 1) * 0.3
+                );
+                group.add(eset);
+                
+                // Store for particle emission
+                matlabStructures.push({
+                    mesh: eset,
+                    type: 'eset',
+                    group: group,
+                    lastEmission: 0
+                });
+            }
             
-            // Random initial position in a sphere
-            const radius = Math.random() * 8 + 5;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(Math.random() * 2 - 1);
-            
-            block.position.x = radius * Math.sin(phi) * Math.cos(theta);
-            block.position.y = radius * Math.sin(phi) * Math.sin(theta);
-            block.position.z = radius * Math.cos(phi);
-            
-            // Store orbit parameters
-            block.userData = {
-                baseRadius: radius,
-                baseTheta: theta,
-                basePhi: phi,
-                orbitSpeed: Math.random() * 0.02 + 0.01,
-                rotationSpeed: (Math.random() - 0.5) * 0.02,
-                orbitAxis: Math.random() > 0.5 ? 'x' : 'y'
-            };
-            
-            scene.add(block);
-            blocks.push(block);
+            scene.add(group);
+            structureGroups.push(group);
         }
 
-        // Add some connecting lines between blocks
-        const lineGeometry = new THREE.BufferGeometry();
-        const lineMaterial = new THREE.LineBasicMaterial({
-            color: 0x667eea,
+        updateLoading(60);
+
+        // H5 side: Tree structure with flowing connections (right side)
+        const h5Structures = [];
+        const h5Tree = new THREE.Group();
+        h5Tree.position.x = 12;
+
+        // Root H5 file
+        const rootGeo = new THREE.OctahedronGeometry(1, 0);
+        const rootMat = new THREE.MeshPhysicalMaterial({
+            color: h5Colors[0],
+            emissive: h5Colors[0],
+            emissiveIntensity: 0.4,
+            metalness: 0.3,
+            roughness: 0.1,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1,
+            transmission: 0.3,
+            opacity: 0.9,
+            transparent: true
+        });
+        const rootH5 = new THREE.Mesh(rootGeo, rootMat);
+        h5Tree.add(rootH5);
+        h5Structures.push({ mesh: rootH5, type: 'root' });
+
+        // Child datasets
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2;
+            const radius = 3;
+            const childGeo = new THREE.TetrahedronGeometry(0.6, 0);
+            const childMat = new THREE.MeshPhysicalMaterial({
+                color: h5Colors[1 + (i % 2)],
+                emissive: h5Colors[1 + (i % 2)],
+                emissiveIntensity: 0.3,
+                metalness: 0.2,
+                roughness: 0.2,
+                clearcoat: 0.8,
+                transmission: 0.4,
+                opacity: 0.85,
+                transparent: true
+            });
+            const child = new THREE.Mesh(childGeo, childMat);
+            child.position.set(
+                Math.cos(angle) * radius,
+                Math.sin(angle) * radius * 0.5,
+                0
+            );
+            h5Tree.add(child);
+            h5Structures.push({ mesh: child, type: 'dataset' });
+
+            // Connection line to root
+            const lineGeo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                child.position
+            ]);
+            const lineMat = new THREE.LineBasicMaterial({
+                color: h5Colors[0],
+                transparent: true,
+                opacity: 0.3
+            });
+            const line = new THREE.Line(lineGeo, lineMat);
+            h5Tree.add(line);
+        }
+
+        scene.add(h5Tree);
+
+        updateLoading(70);
+
+        // Particle system for data flow
+        const particleCount = 200;
+        const particles = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        const sizes = new Float32Array(particleCount);
+        const velocities = new Float32Array(particleCount * 3);
+        const states = new Float32Array(particleCount); // 0=matlab, 1=converting, 2=h5
+
+        const matlabColor = new THREE.Color(matlabColors[0]);
+        const h5Color = new THREE.Color(h5Colors[0]);
+        const conversionColor = new THREE.Color(conversionColors[0]);
+
+        for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            
+            // Start particles at MATLAB structures
+            const source = matlabStructures[Math.floor(Math.random() * matlabStructures.length)];
+            positions[i3] = source.mesh.position.x + source.group.position.x;
+            positions[i3 + 1] = source.mesh.position.y + source.group.position.y;
+            positions[i3 + 2] = source.mesh.position.z + source.group.position.z;
+            
+            // Random velocity toward H5 side
+            velocities[i3] = (Math.random() * 0.1 + 0.05);
+            velocities[i3 + 1] = (Math.random() - 0.5) * 0.05;
+            velocities[i3 + 2] = (Math.random() - 0.5) * 0.05;
+            
+            // Start in MATLAB state
+            states[i] = 0;
+            sizes[i] = Math.random() * 0.1 + 0.05;
+            
+            // MATLAB color
+            colors[i3] = matlabColor.r;
+            colors[i3 + 1] = matlabColor.g;
+            colors[i3 + 2] = matlabColor.b;
+        }
+
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        particles.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.2,
+            vertexColors: true,
             transparent: true,
-            opacity: 0.2
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
         });
 
-        // Create connections between nearby blocks
-        const connections = [];
-        for (let i = 0; i < blocks.length; i++) {
-            for (let j = i + 1; j < blocks.length; j++) {
-                const distance = blocks[i].position.distanceTo(blocks[j].position);
-                if (distance < 8) {
-                    const line = new THREE.Line(
-                        new THREE.BufferGeometry().setFromPoints([
-                            blocks[i].position,
-                            blocks[j].position
-                        ]),
-                        lineMaterial
-                    );
-                    scene.add(line);
-                    connections.push({ line, i, j });
+        const particleSystem = new THREE.Points(particles, particleMaterial);
+        scene.add(particleSystem);
+
+        updateLoading(80);
+
+        // Post-processing
+        const composer = new EffectComposer(renderer);
+        const renderPass = new RenderPass(scene, camera);
+        composer.addPass(renderPass);
+
+        const bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.5, // strength
+            0.4, // radius
+            0.85 // threshold
+        );
+        composer.addPass(bloomPass);
+
+        const outputPass = new OutputPass();
+        composer.addPass(outputPass);
+
+        updateLoading(90);
+
+        // Mouse interaction
+        const mouse = new THREE.Vector2();
+        const raycaster = new THREE.Raycaster();
+        let hoveredObject = null;
+
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                if (obj !== hoveredObject && obj.material) {
+                    if (hoveredObject && hoveredObject.material) {
+                        hoveredObject.material.emissiveIntensity = hoveredObject.userData.originalEmissive || 0.3;
+                    }
+                    hoveredObject = obj;
+                    if (!obj.userData.originalEmissive) {
+                        obj.userData.originalEmissive = obj.material.emissiveIntensity || 0.3;
+                    }
+                    obj.material.emissiveIntensity = 1.0;
+                }
+            } else {
+                if (hoveredObject && hoveredObject.material) {
+                    hoveredObject.material.emissiveIntensity = hoveredObject.userData.originalEmissive || 0.3;
+                    hoveredObject = null;
                 }
             }
-        }
+        });
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 10;
+        controls.maxDistance = 50;
+
+        updateLoading(100);
 
         // Animation
+        const clock = new THREE.Clock();
+        
         function animate() {
             requestAnimationFrame(animate);
+            
+            const elapsedTime = clock.getElapsedTime();
+            const delta = clock.getDelta();
 
-            // Update block positions (orbiting)
-            blocks.forEach((block, index) => {
-                const data = block.userData;
+            // Animate MATLAB structures (hierarchical grouping)
+            structureGroups.forEach((group, gIdx) => {
+                group.rotation.y += 0.002;
+                group.position.y += Math.sin(elapsedTime * 0.5 + gIdx) * 0.01;
                 
-                // Update orbit angle
-                data.baseTheta += data.orbitSpeed;
-                
-                // Calculate new position
-                const radius = data.baseRadius + Math.sin(Date.now() * 0.001 + index) * 0.5;
-                const theta = data.baseTheta;
-                const phi = data.basePhi + Math.sin(Date.now() * 0.0005 + index) * 0.1;
-                
-                block.position.x = radius * Math.sin(phi) * Math.cos(theta);
-                block.position.y = radius * Math.sin(phi) * Math.sin(theta);
-                block.position.z = radius * Math.cos(phi);
-                
-                // Rotate block
-                block.rotation.x += data.rotationSpeed;
-                block.rotation.y += data.rotationSpeed * 0.7;
-                
-                // Pulsing effect
-                const scale = 1 + Math.sin(Date.now() * 0.002 + index) * 0.1;
-                block.scale.set(scale, scale, scale);
+                group.children.forEach((child, cIdx) => {
+                    if (child.geometry && child.geometry.type === 'BoxGeometry') {
+                        child.rotation.x += 0.01;
+                        child.rotation.y += 0.01;
+                    }
+                });
             });
 
-            // Update connection lines
-            connections.forEach(conn => {
-                const points = [
-                    blocks[conn.i].position,
-                    blocks[conn.j].position
-                ];
-                conn.line.geometry.setFromPoints(points);
-                
-                // Fade lines based on distance
-                const distance = blocks[conn.i].position.distanceTo(blocks[conn.j].position);
-                conn.line.material.opacity = Math.max(0, 0.3 - (distance / 20));
+            // Animate H5 tree structure
+            h5Tree.rotation.y += 0.003;
+            h5Structures.forEach((struct, idx) => {
+                struct.mesh.rotation.x += 0.005;
+                struct.mesh.rotation.y += 0.005;
+                const pulse = 1 + Math.sin(elapsedTime * 2 + idx) * 0.1;
+                struct.mesh.scale.set(pulse, pulse, pulse);
             });
 
-            // Rotate camera slightly for dynamic view
-            camera.position.x = Math.sin(Date.now() * 0.0003) * 2;
-            camera.position.y = Math.cos(Date.now() * 0.0002) * 2;
-            camera.lookAt(0, 0, 0);
+            // Update particles (data flow)
+            const positions = particles.attributes.position.array;
+            const colors = particles.attributes.color.array;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                
+                // Update position
+                positions[i3] += velocities[i3];
+                positions[i3 + 1] += velocities[i3 + 1];
+                positions[i3 + 2] += velocities[i3 + 2];
+                
+                // State transitions based on X position
+                if (positions[i3] < -5 && states[i] === 0) {
+                    // In MATLAB zone
+                    states[i] = 0;
+                } else if (positions[i3] >= -5 && positions[i3] < 5 && states[i] < 2) {
+                    // In conversion zone - accelerate and change color
+                    states[i] = 1;
+                    velocities[i3] *= 1.02; // Speed up
+                    
+                    // Transition color
+                    const t = (positions[i3] + 5) / 10;
+                    const color = new THREE.Color().lerpColors(
+                        new THREE.Color(matlabColors[0]),
+                        conversionColor,
+                        t
+                    );
+                    colors[i3] = color.r;
+                    colors[i3 + 1] = color.g;
+                    colors[i3 + 2] = color.b;
+                } else if (positions[i3] >= 5 && states[i] < 2) {
+                    // Arrived at H5 zone
+                    states[i] = 2;
+                    const color = new THREE.Color(h5Colors[0]);
+                    colors[i3] = color.r;
+                    colors[i3 + 1] = color.g;
+                    colors[i3 + 2] = color.b;
+                }
+                
+                // Reset particles that have passed through
+                if (positions[i3] > 15) {
+                    // Respawn at random MATLAB structure
+                    const source = matlabStructures[Math.floor(Math.random() * matlabStructures.length)];
+                    positions[i3] = source.mesh.position.x + source.group.position.x;
+                    positions[i3 + 1] = source.mesh.position.y + source.group.position.y;
+                    positions[i3 + 2] = source.mesh.position.z + source.group.position.z;
+                    
+                    velocities[i3] = Math.random() * 0.1 + 0.05;
+                    velocities[i3 + 1] = (Math.random() - 0.5) * 0.05;
+                    velocities[i3 + 2] = (Math.random() - 0.5) * 0.05;
+                    states[i] = 0;
+                    
+                    const matColor = new THREE.Color(matlabColors[0]);
+                    colors[i3] = matColor.r;
+                    colors[i3 + 1] = matColor.g;
+                    colors[i3 + 2] = matColor.b;
+                }
+            }
+            
+            particles.attributes.position.needsUpdate = true;
+            particles.attributes.color.needsUpdate = true;
 
-            renderer.render(scene, camera);
+            // Animate lights
+            matlabLight.intensity = 1.5 + Math.sin(elapsedTime) * 0.3;
+            h5Light.intensity = 1.5 + Math.sin(elapsedTime + Math.PI) * 0.3;
+            conversionLight.intensity = 2 + Math.sin(elapsedTime * 2) * 0.5;
+
+            // Camera subtle movement
+            camera.position.x += Math.sin(elapsedTime * 0.1) * 0.01;
+            camera.position.y += Math.cos(elapsedTime * 0.15) * 0.01;
+
+            controls.update();
+            composer.render();
         }
 
         // Handle window resize
@@ -359,6 +737,7 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
         });
 
         // Start animation
@@ -366,4 +745,3 @@
     </script>
 </body>
 </html>
-
