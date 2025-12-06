@@ -211,10 +211,21 @@ def export_tier2_magat(bridge, output_file):
         try:
             stimuli = bridge.detect_stimuli()
             stim_grp = f.create_group('stimulus')
-            stim_grp.create_dataset('onset_frames', data=np.array(stimuli['onset_frames'], dtype=np.int32))
-            stim_grp.attrs['num_cycles'] = stimuli['num_stimuli']
+            onset_frames = stimuli.get('onset_frames', [])
+            num_stimuli = stimuli.get('num_stimuli', 0)
+            
+            if len(onset_frames) > 0:
+                stim_grp.create_dataset('onset_frames', data=np.array(onset_frames, dtype=np.int32))
+                stim_grp.attrs['num_cycles'] = num_stimuli
+                print(f"  [OK] Detected {num_stimuli} stimulus onsets")
+            else:
+                stim_grp.create_dataset('onset_frames', data=np.array([], dtype=np.int32))
+                stim_grp.attrs['num_cycles'] = 0
+                print(f"  [WARNING] No stimulus onsets detected")
         except Exception as e:
             print(f"  [WARNING] Could not detect stimuli: {e}")
+            import traceback
+            traceback.print_exc()
             stim_grp = f.create_group('stimulus')
             stim_grp.create_dataset('onset_frames', data=np.array([], dtype=np.int32))
             stim_grp.attrs['num_cycles'] = 0

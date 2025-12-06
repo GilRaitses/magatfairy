@@ -104,43 +104,61 @@ class MAGATBridge:
                     f"Please ensure MAGAT codebase is properly set up."
                 )
     
-    def load_experiment(self, mat_file, tracks_dir, bin_file):
+    def load_experiment(self, mat_file, tracks_dir=None, bin_file=None):
         """
         Load an experiment from MATLAB files.
         
         Args:
             mat_file: Path to .mat experiment file
-            tracks_dir: Path to tracks directory
-            bin_file: Path to .bin file
+            tracks_dir: Path to tracks directory (optional)
+            bin_file: Path to .bin file (optional)
         """
         mat_file = Path(mat_file)
-        tracks_dir = Path(tracks_dir)
-        bin_file = Path(bin_file)
         
         if not mat_file.exists():
             raise FileNotFoundError(f"MAT file not found: {mat_file}")
-        if not tracks_dir.exists():
-            raise FileNotFoundError(f"Tracks directory not found: {tracks_dir}")
-        if not bin_file.exists():
-            raise FileNotFoundError(f"BIN file not found: {bin_file}")
+        
+        # Handle optional tracks_dir and bin_file
+        if tracks_dir is not None:
+            tracks_dir = Path(tracks_dir)
+            if not tracks_dir.exists():
+                raise FileNotFoundError(f"Tracks directory not found: {tracks_dir}")
+        if bin_file is not None:
+            bin_file = Path(bin_file)
+            if not bin_file.exists():
+                raise FileNotFoundError(f"BIN file not found: {bin_file}")
         
         print(f"Loading experiment...")
         print(f"  MAT file: {mat_file.name}")
-        print(f"  Tracks: {tracks_dir.name}")
-        print(f"  BIN file: {bin_file.name}")
+        if tracks_dir:
+            print(f"  Tracks: {tracks_dir.name}")
+        if bin_file:
+            print(f"  BIN file: {bin_file.name}")
         
         # Set paths in MATLAB workspace
         self.eng.workspace['mat_file'] = str(mat_file.absolute())
-        self.eng.workspace['tracks_dir'] = str(tracks_dir.absolute())
-        self.eng.workspace['bin_file'] = str(bin_file.absolute())
+        if tracks_dir:
+            self.eng.workspace['tracks_dir'] = str(tracks_dir.absolute())
+        if bin_file:
+            self.eng.workspace['bin_file'] = str(bin_file.absolute())
         
         try:
             # Load experiment using DataManager
-            # This assumes DataManager has a method to load experiments
-            load_code = f"""
-            app = DataManager();
-            app.loadExperiment('{mat_file.absolute()}', '{tracks_dir.absolute()}', '{bin_file.absolute()}');
-            """
+            if tracks_dir and bin_file:
+                load_code = f"""
+                app = DataManager();
+                app.loadExperiment('{mat_file.absolute()}', '{tracks_dir.absolute()}', '{bin_file.absolute()}');
+                """
+            else:
+                # Load without tracks/bin - just load the experiment structure
+                load_code = f"""
+                app = DataManager();
+                load('{mat_file.absolute()}');
+                if exist('experiment', 'var')
+                    app.eset = ExperimentSet();
+                    app.eset.expt = experiment;
+                end
+                """
             self.eng.eval(load_code, nargout=0)
             self.app = self.eng.workspace['app']
             
@@ -152,12 +170,22 @@ class MAGATBridge:
             print("  Attempting alternative load method...")
             
             try:
-                # Alternative: use ExperimentSet.fromFiles or similar
-                alt_load_code = f"""
-                eset = ExperimentSet.fromFiles('{mat_file.absolute()}', '{tracks_dir.absolute()}', '{bin_file.absolute()}');
-                app = DataManager();
-                app.eset = eset;
-                """
+                # Alternative: load just the experiment structure
+                if tracks_dir and bin_file:
+                    alt_load_code = f"""
+                    eset = ExperimentSet.fromFiles('{mat_file.absolute()}', '{tracks_dir.absolute()}', '{bin_file.absolute()}');
+                    app = DataManager();
+                    app.eset = eset;
+                    """
+                else:
+                    alt_load_code = f"""
+                    load('{mat_file.absolute()}');
+                    app = DataManager();
+                    if exist('experiment', 'var')
+                        app.eset = ExperimentSet();
+                        app.eset.expt = experiment;
+                    end
+                    """
                 self.eng.eval(alt_load_code, nargout=0)
                 self.app = self.eng.workspace['app']
                 print("  [OK] Experiment loaded (alternative method)")
