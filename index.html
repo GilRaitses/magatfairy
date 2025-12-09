@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>magat fairy</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         * {
             margin: 0;
@@ -13,12 +14,13 @@
         }
 
         body {
-            background: #7fff00; /* chartreuse */
+            background: #7fff00;
+            /* chartreuse */
             width: 100vw;
             overflow-x: hidden;
             overflow-y: auto;
             position: relative;
-            cursor: url('cursor.svg'), auto;
+            cursor: url('cursor.png'), auto;
         }
 
         #fairy-background {
@@ -118,68 +120,58 @@
 
         #title-gradient-overlay {
             opacity: 0.12;
-            background: conic-gradient(
-                from 0deg,
-                rgba(139, 0, 0, 0.03) 0%,
-                rgba(128, 0, 32, 0.025) 25%,
-                rgba(101, 0, 33, 0.03) 50%,
-                rgba(120, 0, 20, 0.025) 75%,
-                rgba(139, 0, 0, 0.03) 100%
-            );
+            background: conic-gradient(from 0deg,
+                    rgba(139, 0, 0, 0.03) 0%,
+                    rgba(128, 0, 32, 0.025) 25%,
+                    rgba(101, 0, 33, 0.03) 50%,
+                    rgba(120, 0, 20, 0.025) 75%,
+                    rgba(139, 0, 0, 0.03) 100%);
             filter: blur(160px);
             animation: spinGradient 140s linear infinite;
         }
 
         #title-gradient-overlay-2 {
             opacity: 0.04;
-            background: conic-gradient(
-                from 180deg,
-                rgba(101, 0, 33, 0.025) 0%,
-                rgba(120, 0, 20, 0.03) 25%,
-                rgba(139, 0, 0, 0.025) 50%,
-                rgba(128, 0, 32, 0.03) 75%,
-                rgba(101, 0, 33, 0.025) 100%
-            );
+            background: conic-gradient(from 180deg,
+                    rgba(101, 0, 33, 0.025) 0%,
+                    rgba(120, 0, 20, 0.03) 25%,
+                    rgba(139, 0, 0, 0.025) 50%,
+                    rgba(128, 0, 32, 0.03) 75%,
+                    rgba(101, 0, 33, 0.025) 100%);
             filter: blur(220px);
             animation: spinGradientCounter 180s linear infinite;
         }
 
         #title-gradient-overlay-3 {
             opacity: 0.035;
-            background: conic-gradient(
-                from 90deg,
-                rgba(184, 230, 255, 0.02) 0%,
-                rgba(255, 228, 225, 0.018) 20%,
-                rgba(255, 245, 230, 0.02) 40%,
-                rgba(212, 241, 244, 0.018) 60%,
-                rgba(184, 230, 255, 0.02) 80%,
-                rgba(255, 228, 225, 0.018) 100%
-            );
+            background: conic-gradient(from 90deg,
+                    rgba(184, 230, 255, 0.02) 0%,
+                    rgba(255, 228, 225, 0.018) 20%,
+                    rgba(255, 245, 230, 0.02) 40%,
+                    rgba(212, 241, 244, 0.018) 60%,
+                    rgba(184, 230, 255, 0.02) 80%,
+                    rgba(255, 228, 225, 0.018) 100%);
             filter: blur(180px);
             animation: spinGradient 200s linear infinite;
         }
 
         #title-gradient-overlay-4 {
             opacity: 0.03;
-            background: radial-gradient(
-                circle at 30% 50%,
-                rgba(139, 0, 0, 0.025) 0%,
-                rgba(128, 0, 32, 0.02) 30%,
-                transparent 60%
-            );
+            background: radial-gradient(circle at 30% 50%,
+                    rgba(139, 0, 0, 0.025) 0%,
+                    rgba(128, 0, 32, 0.02) 30%,
+                    transparent 60%);
             filter: blur(250px);
             animation: pulseGradient 8s ease-in-out infinite;
         }
 
         #title-gradient-overlay-5 {
             opacity: 0.025;
-            background: conic-gradient(
-                from 270deg,
-                rgba(101, 0, 33, 0.02) 0%,
-                rgba(120, 0, 20, 0.018) 33%,
-                rgba(139, 0, 0, 0.02) 66%,
-                rgba(128, 0, 32, 0.018) 100%
-            );
+            background: conic-gradient(from 270deg,
+                    rgba(101, 0, 33, 0.02) 0%,
+                    rgba(120, 0, 20, 0.018) 33%,
+                    rgba(139, 0, 0, 0.02) 66%,
+                    rgba(128, 0, 32, 0.018) 100%);
             filter: blur(240px);
             animation: spinGradientCounter 220s linear infinite;
         }
@@ -188,6 +180,7 @@
             from {
                 transform: rotate(0deg);
             }
+
             to {
                 transform: rotate(360deg);
             }
@@ -197,16 +190,20 @@
             from {
                 transform: rotate(360deg);
             }
+
             to {
                 transform: rotate(0deg);
             }
         }
 
         @keyframes pulseGradient {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: scale(1);
                 opacity: 0.03;
             }
+
             50% {
                 transform: scale(1.1);
                 opacity: 0.04;
@@ -353,6 +350,7 @@
             0% {
                 transform: translateX(100%);
             }
+
             100% {
                 transform: translateX(-100%);
             }
@@ -427,6 +425,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="fairy-background"></div>
     <!-- maggot-background removed -->
@@ -467,7 +466,8 @@
             <h2 class="modal-title">convert data</h2>
             <p class="modal-description">
                 Convert MAGAT experiment data from MATLAB structured format into Python-ready H5 files.
-                Drag and drop a data folder (experiment, ESET, or collection); detection and conversion run automatically.
+                Drag and drop a data folder (experiment, ESET, or collection); detection and conversion run
+                automatically.
                 Outputs are saved to the exports/ folder in the repository.
             </p>
         </div>
@@ -479,7 +479,8 @@
             <h2 class="modal-title">documentation</h2>
             <p class="modal-description">
                 Documentation for magat fairy covers supported data formats, conversion options, output structure,
-                and troubleshooting. Supported inputs include single experiments, single tracks, ESETs, and collections with multiple ESETs.
+                and troubleshooting. Supported inputs include single experiments, single tracks, ESETs, and collections
+                with multiple ESETs.
             </p>
         </div>
     </div>
@@ -501,7 +502,8 @@
             <h2 class="modal-title">about</h2>
             <p class="modal-description">
                 magat fairy transforms MAGAT analyzer data from MATLAB format to HDF5 for Python workflows.
-                It detects data types, handles calibration, and preserves experiment metadata to bridge MATLAB and Python ecosystems.
+                It detects data types, handles calibration, and preserves experiment metadata to bridge MATLAB and
+                Python ecosystems.
             </p>
         </div>
     </div>
@@ -524,7 +526,7 @@
                 console.error('fairy-background element not found');
                 return;
             }
-            
+
             if (typeof fairyFrames === 'undefined' || !fairyFrames || !fairyFrames.length) {
                 console.log('Waiting for fairyFrames...');
                 setTimeout(initFairyBackground, 100);
@@ -532,14 +534,14 @@
             }
 
             console.log('Loading fairy frames, total frames:', fairyFrames.length);
-            
+
             // Use first 5 frames (indices 0-4)
             const framesToUse = fairyFrames.slice(0, 5);
             let currentFrameIndex = 0;
-            
+
             // Set initial frame
             background.textContent = framesToUse[currentFrameIndex];
-            
+
             // Cycle through frames
             setInterval(() => {
                 currentFrameIndex = (currentFrameIndex + 1) % framesToUse.length;
@@ -652,7 +654,7 @@
             initFairyBackground();
             // initMaggotBackground removed
             initModalsCloseButtons();
-            
+
             waitForThreeJS(() => {
                 initTitleLighting();
             });
@@ -660,4 +662,5 @@
         });
     </script>
 </body>
+
 </html>
