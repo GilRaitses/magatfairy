@@ -43,22 +43,27 @@ def export_derivation_rules(bridge, h5_file):
     
     Added: 2025-12-10 (INDYsim compatibility fix)
     """
+    # Use require_group to avoid "already exists" error on retry
+    grp = h5_file.require_group('derivation_rules')
+    
     try:
         # Get derivation rules from first track (same for all tracks in experiment)
         bridge.eng.workspace['app'] = bridge.app
-        dr = bridge.eng.eval("app.eset.expt(1).track(1).dr", nargout=1)
+        # MATLAB returns DerivationRules as matlab.object, not dict
+        # Must extract each field individually via eval
+        smoothTime = float(bridge.eng.eval("app.eset.expt(1).track(1).dr.smoothTime", nargout=1))
+        derivTime = float(bridge.eng.eval("app.eset.expt(1).track(1).dr.derivTime", nargout=1))
+        interpTime = float(bridge.eng.eval("app.eset.expt(1).track(1).dr.interpTime", nargout=1))
         
-        grp = h5_file.create_group('derivation_rules')
-        grp.attrs['smoothTime'] = float(dr['smoothTime'])  # typically 0.2s
-        grp.attrs['derivTime'] = float(dr['derivTime'])    # typically 0.1s
-        grp.attrs['interpTime'] = float(dr['interpTime'])  # frame interval
+        grp.attrs['smoothTime'] = smoothTime
+        grp.attrs['derivTime'] = derivTime
+        grp.attrs['interpTime'] = interpTime
         
-        print(f"  [OK] Exported derivation_rules: smoothTime={dr['smoothTime']:.3f}s, "
-              f"derivTime={dr['derivTime']:.3f}s, interpTime={dr['interpTime']:.4f}s")
+        print(f"  [OK] Exported derivation_rules: smoothTime={smoothTime:.3f}s, "
+              f"derivTime={derivTime:.3f}s, interpTime={interpTime:.4f}s")
     except Exception as e:
         print(f"  [WARN] Could not export derivation_rules from MATLAB: {e}")
         # Use sensible defaults based on typical MAGAT parameters
-        grp = h5_file.create_group('derivation_rules')
         grp.attrs['smoothTime'] = 0.2   # 0.2s smoothing window
         grp.attrs['derivTime'] = 0.1    # 0.1s derivative window
         grp.attrs['interpTime'] = 0.05  # 20 fps = 0.05s per frame
