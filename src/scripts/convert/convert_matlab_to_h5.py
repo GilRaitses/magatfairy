@@ -33,6 +33,43 @@ except ImportError:
     from mat2h5.bridge import MAGATBridge
 
 
+def export_derivation_rules(bridge, h5_file):
+    """
+    Export MAGAT derivation rules (smoothTime, derivTime, interpTime) to H5.
+    Required for head-swing buffer calculation in downstream analysis.
+    
+    These parameters are used by MAGAT segmentation:
+        buffer = ceil((smoothTime + derivTime) / interpTime)
+    
+    Added: 2025-12-10 (INDYsim compatibility fix)
+    """
+    # Use require_group to avoid "already exists" error on retry
+    grp = h5_file.require_group('derivation_rules')
+    
+    try:
+        # Get derivation rules from first track (same for all tracks in experiment)
+        bridge.eng.workspace['app'] = bridge.app
+        # MATLAB returns DerivationRules as matlab.object, not dict
+        # Must extract each field individually via eval
+        smoothTime = float(bridge.eng.eval("app.eset.expt(1).track(1).dr.smoothTime", nargout=1))
+        derivTime = float(bridge.eng.eval("app.eset.expt(1).track(1).dr.derivTime", nargout=1))
+        interpTime = float(bridge.eng.eval("app.eset.expt(1).track(1).dr.interpTime", nargout=1))
+        
+        grp.attrs['smoothTime'] = smoothTime
+        grp.attrs['derivTime'] = derivTime
+        grp.attrs['interpTime'] = interpTime
+        
+        print(f"  [OK] Exported derivation_rules: smoothTime={smoothTime:.3f}s, "
+              f"derivTime={derivTime:.3f}s, interpTime={interpTime:.4f}s")
+    except Exception as e:
+        print(f"  [WARN] Could not export derivation_rules from MATLAB: {e}")
+        # Use sensible defaults based on typical MAGAT parameters
+        grp.attrs['smoothTime'] = 0.2   # 0.2s smoothing window
+        grp.attrs['derivTime'] = 0.1    # 0.1s derivative window
+        grp.attrs['interpTime'] = 0.05  # 20 fps = 0.05s per frame
+        print(f"  [OK] Using default derivation_rules (smoothTime=0.2, derivTime=0.1, interpTime=0.05)")
+
+
 def export_tier2_magat(bridge, output_file):
     """Export complete MAGAT structure with ETI at root"""
     
@@ -76,6 +113,10 @@ def export_tier2_magat(bridge, output_file):
     with h5py.File(output_file, 'w') as f:
         # === EXPERIMENT GLOBALS ===
         print("Exporting experiment globals...")
+        
+        # Export derivation rules for head-swing calculation (INDYsim compatibility)
+        export_derivation_rules(bridge, f)
+        
         bridge.eng.workspace['app'] = bridge.app
         expt_data = bridge.eng.eval("app.getCompleteExperiment()", nargout=1)
         
