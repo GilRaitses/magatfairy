@@ -417,10 +417,6 @@ For issues or questions:
 - systemfairy environment checker
 - Colored progress tracking
 
-## On the name
-
-magatfairy is the MAGAT analyzer with a fairy on top. The fairy is deliberate, a little softness and play next to a blunt technical name, and a small friendly mark to leave on something useful.
-
 ## License
 
 This project is licensed under the MIT License, see the [LICENSE](LICENSE) file for details.
