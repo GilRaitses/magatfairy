@@ -419,7 +419,7 @@ For issues or questions:
 
 ## On the name
 
-MAGAT is the upstream analyzer this tool bridges, and larval work in the lab often gets called maggot work. That shorthand always sat a little close to a slur for comfort, so I paired it with fairy. The reversal is deliberate and a little playful, a small bit of warmth set against a name that did not carry any. As a non-binary person, leaving an openly soft name on a useful tool felt like a quiet way to make the space a little more welcoming than I found it. The tool stands on its own. The name is the one place I left something of myself.
+magatfairy is the MAGAT analyzer with a fairy on top. The fairy is deliberate, a little softness and play next to a blunt technical name, and a small friendly mark to leave on something useful.
 
 ## License
 
