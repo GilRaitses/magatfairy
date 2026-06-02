@@ -393,9 +393,13 @@ For issues or questions:
 - Review field mapping reference: `docs/field-mapping.md`
 - Check log files in `exports/` directory
 
+## On the name
+
+MAGAT is the upstream analyzer this tool bridges, and larval work in the lab often gets called maggot work. That shorthand always sat a little close to a slur for comfort, so I paired it with fairy. The reversal is deliberate and a little playful, a small bit of warmth set against a name that did not carry any. As a non-binary person, leaving an openly soft name on a useful tool felt like a quiet way to make the space a little more welcoming than I found it. The tool stands on its own. The name is the one place I left something of myself.
+
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License, see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
